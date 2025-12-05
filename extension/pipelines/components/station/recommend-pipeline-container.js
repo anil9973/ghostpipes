@@ -1,6 +1,7 @@
 import { PipelineActionBar } from "./pipeline-action-bar.js";
 import { react } from "../../../lib/om.compact.js";
 import { PipelineList } from "./pipeline-list.js";
+import { db, Store } from "../../db/db.js";
 
 /**PipelineContainer - Wrapper for action bar and pipeline list */
 export class RecommendPipelineContainer extends HTMLElement {
@@ -15,7 +16,8 @@ export class RecommendPipelineContainer extends HTMLElement {
 		return [new PipelineActionBar(this.props), new PipelineList(this.pipelines)];
 	}
 
-	connectedCallback() {
+	async connectedCallback() {
+		this.pipelines.length === 0 && (this.pipelines = await db.getAll(Store.Pipelines));
 		this.replaceChildren(...this.render());
 		$on(this.lastElementChild, "change", ({ target }) => (this.props.selectPipelineId = target.value));
 	}

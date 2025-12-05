@@ -16,8 +16,13 @@ export class PipelineActionBar extends HTMLElement {
 		window.location.search = `?p=${this.props.selectPipelineId}`;
 	}
 
-	handleRun() {
-		chrome.runtime.sendMessage({ type: "EXECUTE_PIPELINE", pipelineId: this.props.selectPipelineId });
+	async handleRun() {
+		const response = await chrome.runtime.sendMessage({
+			type: "EXECUTE_PIPELINE",
+			pipelineId: this.props.selectPipelineId,
+		});
+		if (response.errCaused) return notify(response.errCaused, "error");
+		notify("Task complete");
 	}
 
 	render() {

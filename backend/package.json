@@ -6,12 +6,12 @@
 	"type": "module",
 	"scripts": {
 		"test": "echo \"Error: no test specified\" && exit 1",
-		"dev": "node --watch src/server.js"
+		"dev": "node --watch src/server.js",
+		"start": "node  src/server.js"
 	},
 	"keywords": [],
 	"author": "",
 	"license": "ISC",
-	"packageManager": "pnpm@10.18.2",
 	"dependencies": {
 		"@aws-sdk/client-secrets-manager": "^3.940.0",
 		"@block65/webcrypto-web-push": "^1.0.2",

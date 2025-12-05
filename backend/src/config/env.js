@@ -1,6 +1,7 @@
 import "dotenv/config";
 export default {
 	port: +process.env.PORT || 3000,
+	host: "0.0.0.0",
 	nodeEnv: process.env.NODE_ENV || "development",
 
 	// Aurora PostgreSQL

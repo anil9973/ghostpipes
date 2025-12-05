@@ -1,4 +1,5 @@
-export const SERVER_URL = "http://localhost:5000/api";
+// export const SERVER_URL = "http://localhost:5000/api";
+export const SERVER_URL = "https://89eicj7p5e.us-east-1.awsapprunner.com/api";
 
 /** @enum {string} */
 export const CtmElemNames = Object.freeze({
