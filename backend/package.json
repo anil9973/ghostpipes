@@ -1,0 +1,29 @@
+{
+	"name": "backend",
+	"version": "1.0.0",
+	"description": "",
+	"main": "index.js",
+	"type": "module",
+	"scripts": {
+		"test": "echo \"Error: no test specified\" && exit 1",
+		"dev": "node --watch src/server.js"
+	},
+	"keywords": [],
+	"author": "",
+	"license": "ISC",
+	"packageManager": "pnpm@10.18.2",
+	"dependencies": {
+		"@aws-sdk/client-secrets-manager": "^3.940.0",
+		"@block65/webcrypto-web-push": "^1.0.2",
+		"@fastify/cors": "^11.1.0",
+		"@fastify/jwt": "^10.0.0",
+		"@fastify/rate-limit": "^10.3.0",
+		"bcrypt": "^6.0.0",
+		"dotenv": "^17.2.3",
+		"fastify": "^5.6.2",
+		"fastify-plugin": "^5.1.0",
+		"knex": "^3.1.0",
+		"nanoid": "^5.1.6",
+		"pg": "^8.16.3"
+	}
+}

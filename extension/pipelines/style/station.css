@@ -1,0 +1,271 @@
+app-top-header {
+	display: flex;
+	column-gap: 0.5em;
+	justify-content: space-between;
+	padding: 0.5em;
+	box-shadow: var(--card);
+	background-color: light-dark(white, black);
+
+	& .logo {
+		vertical-align: middle;
+		font-size: 1.2rem;
+		font-weight: bold;
+		text-shadow: #fb00ff -1px 2px 1px;
+	}
+
+	& button {
+		padding-block: 0.2em !important;
+	}
+
+	& .logo {
+		margin-inline: auto;
+	}
+}
+
+input-field-container {
+	display: block;
+	height: 90vh;
+	align-content: center;
+	margin-inline: auto;
+}
+
+prompt-input-field {
+	display: block;
+	width: 60%;
+	margin-inline: auto;
+	border-radius: 0.5em;
+	padding: 0.5em;
+	box-shadow: var(--card);
+	background-color: light-dark(white, rgb(26, 25, 25));
+	position: relative;
+
+	& .prompt-wrapper {
+		--block-sdw-clr: 160 160 160;
+		padding: 0.5em;
+		background-color: light-dark(white, black);
+		box-shadow: inset -3px 3px 3px 0px rgb(var(--block-sdw-clr) / 0.5),
+			inset 3px -3px 3px 0px rgb(var(--block-sdw-clr) / 0.5);
+	}
+
+	& section {
+		min-height: 6lh;
+		max-height: 20lh;
+		overflow-y: auto;
+		scrollbar-width: thin;
+
+		&:empty::before {
+			content: attr(data-placeholder);
+			color: gray;
+		}
+	}
+
+	& .action-btns {
+		position: absolute;
+		bottom: 1.2em;
+		right: 1.2em;
+
+		& button[type="submit"] {
+			padding-inline: 0.3em;
+		}
+	}
+}
+
+& trigger-option-bar {
+	display: flex;
+	column-gap: 0.5em;
+
+	& input[type="url"],
+	& input[type="text"] {
+		border-radius: 0.5em;
+		border: var(--border);
+		padding: 0.4em;
+	}
+
+	input[type="url"] {
+		display: block;
+	}
+
+	& .row {
+		display: flex;
+	}
+}
+
+recommend-pipeline-container {
+	display: block;
+	width: 80%;
+	margin-inline: auto;
+	margin-top: 1em;
+	border-radius: 0.5em;
+	box-shadow: var(--card);
+	background-color: light-dark(whitesmoke, hsl(0, 0%, 12%));
+}
+
+pipeline-list {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 1em;
+	padding: 0.5em;
+}
+
+pipeline-card {
+	min-width: 24ch;
+	border-radius: 0.5em;
+	box-shadow: var(--card);
+	background-color: light-dark(white, black);
+
+	& header {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		padding: 0.4em;
+		box-shadow: var(--card);
+		background-color: light-dark(white, hsl(0, 0%, 10%));
+		position: relative;
+
+		&:hover {
+			& action-menu > button,
+			& input[type="radio"] {
+				opacity: 1;
+			}
+		}
+
+		& input[type="radio"] {
+			position: absolute;
+			top: -0.5em;
+			left: -0.5em;
+			opacity: 0;
+			transition: opacity 200ms ease-out;
+		}
+
+		& .pipeline-name {
+			flex-grow: 1;
+			text-align: center;
+			font-weight: 500;
+		}
+	}
+
+	& input[type="radio"]:checked {
+		border: 4px groove red;
+	}
+
+	& action-menu {
+		position: relative;
+
+		& button {
+			opacity: 0;
+			transition: opacity 200ms ease-out;
+		}
+
+		&:focus-within menu {
+			scale: 1;
+		}
+
+		& menu {
+			position: absolute;
+			right: 0;
+			z-index: 2;
+			box-shadow: var(--card);
+			background-color: light-dark(white, hsl(0, 0%, 10%));
+			scale: 1 0;
+			transition: scale 200ms ease-out;
+			transform-origin: top;
+
+			& li {
+				display: flex;
+				justify-content: space-between;
+				padding: 0.5em;
+				box-shadow: var(--card);
+				background-color: light-dark(white, hsl(0, 0%, 10%));
+				cursor: pointer;
+
+				&:not(:last-child) {
+					border-bottom: var(--border);
+				}
+			}
+		}
+	}
+}
+
+pipeline-diagram {
+	padding: 0.5em;
+	display: flex;
+	flex-direction: column;
+	position: relative;
+
+	& ul {
+		display: flex;
+		flex-direction: column;
+		gap: 2rem;
+		z-index: 1;
+		padding-block: 0.5rem;
+	}
+
+	& li {
+		list-style-type: none;
+		display: flex;
+		column-gap: 0.5em;
+		align-items: center;
+		padding: 0.3em;
+		border-radius: 0.5em 0.5em 0 0;
+		box-shadow: var(--card);
+		background-color: light-dark(white, hsl(0, 0%, 8%));
+
+		& span {
+			font-weight: 500;
+			font-size: 0.9rem;
+		}
+	}
+
+	& svg.connector-layer {
+		--pp-border: light-dark(#ccc, #555);
+		--pp-line: light-dark(#555, #aaa);
+		position: absolute;
+		inset: 0;
+		width: 100%;
+		height: 100%;
+		pointer-events: none;
+	}
+
+	& .pp-line {
+		fill: none;
+		stroke: var(--pp-line);
+		stroke-width: 4px;
+		stroke-linejoin: round;
+		transition: stroke 0.3s;
+	}
+
+	& .pp-arrow-fill {
+		fill: var(--pp-line);
+		transition: fill 0.3s;
+	}
+}
+
+pipeline-action-bar {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 0.5em;
+	border-radius: 0.5em 0.5em 0 0;
+	box-shadow: var(--card);
+	background-color: light-dark(white, hsl(0, 0%, 8%));
+
+	& button {
+		padding-block: 0.2em !important;
+	}
+}
+
+pipelines-drawer-panel {
+	height: 100%;
+	min-width: 30%;
+	max-width: 50%;
+	padding: 0;
+	flex-direction: column;
+	row-gap: 0.5em;
+	translate: -100% 0;
+	transition: translate 200ms ease-out;
+
+	&:popover-open {
+		display: flex;
+		translate: 0 0;
+	}
+}

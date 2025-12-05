@@ -1,0 +1,23 @@
+
+**/crx-hmr.js
+**/ghost-pipes.zip
+**/.vscode
+**/.TODO
+**/build.sh
+**/jsconfig.json
+biome.json
+
+**/build/
+**/dist/
+
+# Virtual environments
+**/.venv/
+**/.env
+
+# Custom / project files
+**/.TODO
+**/deploy.sh
+
+# Backend
+**/node_modules
+**/npm-debug.log

@@ -1,0 +1,13 @@
+{
+	"name": "Spec Update Sync",
+	"description": "Notify when spec files are updated to review implementation alignment",
+	"trigger": {
+		"type": "onFileSave",
+		"filePattern": ".kiro/specs/**/*.md"
+	},
+	"action": {
+		"type": "sendMessage",
+		"message": "📋 Spec file updated. Review if implementation needs updates to match new requirements."
+	},
+	"enabled": true
+}

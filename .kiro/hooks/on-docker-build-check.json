@@ -1,0 +1,13 @@
+{
+	"name": "Docker Build Check",
+	"description": "Suggest rebuilding Docker image when Dockerfile or package.json changes",
+	"trigger": {
+		"type": "onFileSave",
+		"filePattern": "{Dockerfile,package.json,package-lock.json}"
+	},
+	"action": {
+		"type": "sendMessage",
+		"message": "🐳 Docker configuration changed. Consider rebuilding the image: docker build -t ghostpipes-backend ."
+	},
+	"enabled": true
+}

@@ -1,0 +1,12 @@
+{
+	"name": "Manual Lint Check",
+	"description": "Run ESLint on demand to check code quality",
+	"trigger": {
+		"type": "manual"
+	},
+	"action": {
+		"type": "executeCommand",
+		"command": "npm run lint"
+	},
+	"enabled": true
+}

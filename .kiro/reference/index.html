@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ghostpipes 🎃 Home page</title>
+    <link rel="stylesheet" href="./css/base.css">
+    <link rel="stylesheet" href="./css/home-page.css">
+    <script type="module" src="/hmr"></script>
+</head>
+
+<body>
+    <!-- Homepage path (/) -->
+    <app-top-header>
+        <div class="my-pipes-drawer-btn">
+            <span>My Pipes</span>
+            <svg class="icon">
+                <use href="/assets/icons.svg#drawer-open" />
+            </svg>
+        </div>
+        <div>Ghostpipes 🎃</div>
+        <button>Create pipeline</button>
+    </app-top-header>
+
+    <main>
+        <prompt-input-field>
+            <div class="wrapper">
+                <div class="prompt-header">
+                    <span>Trigger by</span>
+                    <label>
+                        <input type="checkbox"> <span>Manul</span>
+                    </label>
+                    <div>
+                        <label>
+                            <input type="checkbox"> <span>Webhook</span>
+                            <!--If checked  -->
+                            <input type="url" name="webhook-api">
+                        </label>
+                    </div>
+
+                    <div>
+                        <label>
+                            <input type="checkbox"> <span>Schedule</span>
+                            <div class="row">
+                                <!--If checked  -->
+                                <select name="" id="">
+                                    <option value="">Every 1 day</option>
+                                    <option value="">Every 7 day</option>
+                                    <option value="">Every 30 day</option>
+                                    <option value="">Once</option>
+                                </select>
+                                <!-- If Once -->
+                                <input type="datetime" name="" id="">
+                                <!-- else -->
+                                <input type="time" name="" id="">
+                            </div>
+                        </label>
+                    </div>
+                </div>
+                <section contenteditable="true"></section>
+                <svg class="icon">
+                    <use href="/assets/icons.svg#send" />
+                </svg>
+            </div>
+
+        </prompt-input-field>
+
+        <!-- Show when extension match previous built pipeline based on input data provided -->
+        <pipeline-container>
+            <pipeline-action-bar>
+                <div>10 Pipeline matched</div>
+                <!-- At right -->
+                <div class="action-btns">
+                    <!-- If none pipeline selected -->
+                    <button class="primary-btn">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
+                            <path fill="currentColor"
+                                d="M3.44 13.557a1.5 1.5 0 0 0 1.795.244l8-4.5a1.5 1.5 0 0 0 0-2.61l-8.01-4.507A1.52 1.52 0 0 0 3 3.496v9c0 .398.158.78.44 1.06m.706-10.414a.5.5 0 0 1 .599-.082l8 4.5a.5.5 0 0 1 0 .87l-7.99 4.494A.492.492 0 0 1 4 12.496v-9a.5.5 0 0 1 .146-.353m6.614 8.693l1.22-.68q.018.125.02.25a1.51 1.51 0 0 1-.76 1.31l-5.08 2.86a3.6 3.6 0 0 1-1.66.42a3 3 0 0 1-.91-.13a3.33 3.33 0 0 1-1.59-.93a3.46 3.46 0 0 1-1-2.44v-5.59a1.48 1.48 0 0 1 1-1.39v6.98a2.513 2.513 0 0 0 3.7 2.19l5.05-2.84a.01.01 0 0 0 .01-.01" />
+                        </svg>
+                        <span>Create pipeline</span>
+                    </button>
+
+                    <!-- If  pipeline selected -->
+
+                    <button class="text-btn">
+                        <svg class="icon">
+                            <use href="/assets/icons.svg#edit" />
+                        </svg>
+                        <span>edit</span>
+                    </button>
+                    <button class="primary-btn">
+                        <svg class="icon">
+                            <use href="/assets/icons.svg#run" />
+                        </svg>
+                        <span>Run</span>
+                    </button>
+                </div>
+            </pipeline-action-bar>
+            <pipeline-list>
+                <pipeline-card>
+                    <div class="pipeline-name">pipeline name</div>
+                    <pipeline-diagram>
+                        <div>trigger type</div>
+                        ⬇︎
+                        <div>filter</div>
+                        ⬇︎
+                        <div>Loop</div>
+                        ⬇︎
+                        <div>output</div>
+                    </pipeline-diagram>
+                </pipeline-card>
+            </pipeline-list>
+        </pipeline-container>
+    </main>
+
+    <pipelines-drawerpanel popover="">
+        <pipeline-list>
+            <pipeline-card>
+                <div class="pipeline-name">
+                    <span>pipeline name</span>
+                    <action-menu tabindex="0">
+                        <button>
+                            <svg class="icon">
+                                <use href="/assets/icons.svg#menu" />
+                            </svg>
+                        </button>
+                        <menu>
+                            <li>
+                                <svg class="icon">
+                                    <use href="/assets/icons.svg#edit" />
+                                </svg>
+                                <span>Edit</span>
+                            </li>
+
+                            <li>
+                                <svg class="icon">
+                                    <use href="/assets/icons.svg#delete" />
+                                </svg>
+                                <span>Delete</span>
+                            </li>
+                        </menu>
+                    </action-menu>
+                </div>
+                <pipeline-diagram>
+                    <div>trigger type</div>
+                    ⬇︎
+                    <div>filter</div>
+                    ⬇︎
+                    <div>Loop</div>
+                    ⬇︎
+                    <div>output</div>
+                </pipeline-diagram>
+            </pipeline-card>
+        </pipeline-list>
+    </pipelines-drawerpanel>
+
+</body>
+
+</html>

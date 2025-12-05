@@ -1,0 +1,13 @@
+{
+	"name": "Environment Variable Change Warning",
+	"description": "Warn when .env files are modified to restart the server",
+	"trigger": {
+		"type": "onFileSave",
+		"filePattern": ".env*"
+	},
+	"action": {
+		"type": "sendMessage",
+		"message": "⚠️ Environment variables changed. Restart the server for changes to take effect."
+	},
+	"enabled": true
+}

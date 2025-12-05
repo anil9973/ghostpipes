@@ -1,0 +1,58 @@
+@scope (#user-auth-dialog) {
+	.close-btn {
+		position: absolute;
+		top: -0.5em;
+		right: -0.5em;
+	}
+
+	h2 {
+		text-align: center;
+	}
+
+	input[type="email"],
+	input[type="password"] {
+		border-radius: 0.5em;
+		border: var(--border);
+		padding: 0.4em;
+	}
+
+	.form-group {
+		margin-bottom: 1em;
+
+		label {
+			display: block;
+			margin-bottom: 0.25em;
+			font-size: 0.875em;
+		}
+
+		input {
+			width: 100%;
+			padding: 0.6em;
+		}
+	}
+
+	.primary-btn {
+		width: 100%;
+		padding: 1em;
+		border: none;
+		border-radius: 0.25em;
+		font-weight: 600;
+		cursor: pointer;
+		margin-top: 0.5em;
+	}
+
+	.toggle-mode {
+		text-align: center;
+		margin-top: 1em;
+		font-size: 0.8rem;
+
+		a {
+			color: inherit;
+			text-decoration: none;
+
+			&:hover {
+				text-decoration: underline;
+			}
+		}
+	}
+}

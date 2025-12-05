@@ -1,0 +1,13 @@
+{
+	"name": "Run Tests on Save",
+	"description": "Automatically run tests when backend code files are saved",
+	"trigger": {
+		"type": "onFileSave",
+		"filePattern": "src/**/*.js"
+	},
+	"action": {
+		"type": "executeCommand",
+		"command": "npm test -- --run --reporter=verbose"
+	},
+	"enabled": true
+}

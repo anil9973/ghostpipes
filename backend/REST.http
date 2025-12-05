@@ -1,0 +1,155 @@
+### Variables
+@baseUrl = http://localhost:5000/api
+@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI1ZDJmYmEwMS1iY2JiLTRiYjItODhhYi1kOTdjYWIwMTM0NGQiLCJpYXQiOjE3NjQ3Mjk1MzcsImV4cCI6MTc2NTMzNDMzN30.xR0Pj9hbUy9TW3gPRJmuI_JwOD4AiFSc3_39WmzPuqo
+@pipelineId = ee1193b3-5d7d-42cf-8881-8876a34b36f0
+@webhookId = f0667fbc-84a0-4d08-890f-26e174fba4f5
+@webhookToken = KYIEnqcIHBZD5LwCtNiWyQRy_yyhk7Zu
+
+### Health Check
+GET http://localhost:5000/health
+
+### Get VAPID Public Key
+GET {{baseUrl}}/push/vapid
+
+### Sign Up
+POST {{baseUrl}}/auth/signup
+Content-Type: application/json
+
+{
+  "email": "sureshsharma@gmail.com",
+  "password": "securepassword123",
+  "displayName": "Test User"
+}
+
+### Log In
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "sureshsharma@gmail.com",
+  "password": "securepassword123"
+}
+
+### Get Current User
+GET {{baseUrl}}/auth/me
+Authorization: Bearer {{token}}
+
+### List Pipelines
+GET {{baseUrl}}/pipelines
+Authorization: Bearer {{token}}
+
+### Create Pipeline
+POST {{baseUrl}}/pipelines
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "title": "New Pipeline",
+  "summary": "Optional description",
+  "trigger": {
+    "type": "manual",
+    "config": {}
+  },
+  "nodes": [
+    {
+      "id": "node-1",
+      "type": "http_request",
+      "title": "Fetch Data",
+      "position": { "x": 100, "y": 100 },
+      "config": { "url": "https://api.example.com" }
+    }
+  ],
+  "pipes": [
+    {
+      "id": "pipe-1",
+      "sourceId": "node-1",
+      "sourceSide": "right",
+      "targetId": "node-2",
+      "targetSide": "left"
+    }
+  ],
+  "isPublic": false
+}
+
+### Get Pipeline
+GET {{baseUrl}}/pipelines/{{pipelineId}}
+Authorization: Bearer {{token}}
+
+### Update Pipeline
+PUT {{baseUrl}}/pipelines/{{pipelineId}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Updated Pipeline Name",
+  "description": "Updated description"
+}
+
+### Delete Pipeline
+DELETE {{baseUrl}}/pipelines/{{pipelineId}}
+Authorization: Bearer {{token}}
+
+### Clone Pipeline
+POST {{baseUrl}}/pipelines/clone/abc123token
+Authorization: Bearer {{token}}
+
+### Create Webhook
+POST {{baseUrl}}/webhooks
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "pipelineId": "{{pipelineId}}",
+  "method": "POST"
+}
+
+### List Webhooks for Pipeline
+GET {{baseUrl}}/webhooks/pipeline/{{pipelineId}}
+Authorization: Bearer {{token}}
+
+### Get Webhook
+GET {{baseUrl}}/webhooks/{{webhookId}}
+Authorization: Bearer {{token}}
+
+### Delete Webhook
+DELETE {{baseUrl}}/webhooks/{{webhookId}}
+Authorization: Bearer {{token}}
+
+### Trigger Webhook (POST)
+POST http://localhost:5000/wh/{{webhookToken}}
+Content-Type: application/json
+
+{
+  "productId": "12345",
+  "price": 99.99,
+  "quantity": 5
+}
+
+### Trigger Webhook (GET)
+GET http://localhost:3000/wh/{{webhookToken}}?param1=value1&param2=value2
+
+### Get Webhook Data
+GET {{baseUrl}}/webhooks/{{webhookId}}/data
+Authorization: Bearer {{token}}
+
+### Subscribe to Push Notifications
+POST {{baseUrl}}/push/subscribe
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "endpoint": "https://fcm.googleapis.com/fcm/send/...",
+  "keys": {
+    "p256dh": "base64-encoded-key",
+    "auth": "base64-encoded-key"
+  }
+}
+
+### Unsubscribe from Push Notifications
+POST {{baseUrl}}/push/unsubscribe
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "endpoint": "https://fcm.googleapis.com/fcm/send/..."
+}

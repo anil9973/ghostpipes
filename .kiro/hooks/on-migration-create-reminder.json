@@ -1,0 +1,13 @@
+{
+	"name": "Migration Creation Reminder",
+	"description": "Remind to run migrations when new migration files are created",
+	"trigger": {
+		"type": "onFileSave",
+		"filePattern": "src/db/migrations/*.js"
+	},
+	"action": {
+		"type": "sendMessage",
+		"message": "New migration file detected. Remember to run: npm run migrate"
+	},
+	"enabled": true
+}

@@ -1,0 +1,12 @@
+{
+	"name": "Reset Database",
+	"description": "Rollback all migrations and re-run them (development only)",
+	"trigger": {
+		"type": "manual"
+	},
+	"action": {
+		"type": "executeCommand",
+		"command": "npm run migrate:rollback && npm run migrate && npm run seed"
+	},
+	"enabled": true
+}

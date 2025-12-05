@@ -1,0 +1,13 @@
+{
+	"name": "API Schema Validation",
+	"description": "Validate API schemas when schema files are modified",
+	"trigger": {
+		"type": "onFileSave",
+		"filePattern": "src/modules/**/schemas.js"
+	},
+	"action": {
+		"type": "sendMessage",
+		"message": "🔍 API schema updated. Ensure request/response validation is working correctly and update API documentation if needed."
+	},
+	"enabled": true
+}

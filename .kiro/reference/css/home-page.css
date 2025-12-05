@@ -1,0 +1,149 @@
+app-top-header {
+	display: flex;
+	justify-content: space-between;
+	padding: 0.5em;
+	box-shadow: var(--card);
+	background-color: light-dark(white, black);
+}
+
+main {
+	height: 90vh;
+	align-content: center;
+	margin-inline: auto;
+}
+
+prompt-input-field {
+	display: block;
+	width: 60%;
+	margin-inline: auto;
+	border-radius: 0.5em;
+	padding: 0.5em;
+	box-shadow: var(--card);
+	background-color: light-dark(white, rgb(26, 25, 25));
+	position: relative;
+
+	.wrapper {
+		--block-sdw-clr: 160 160 160;
+		padding: 0.5em;
+		background-color: light-dark(white, black);
+		box-shadow: inset -3px 3px 3px 0px rgb(var(--block-sdw-clr) / 0.5),
+			inset 3px -3px 3px 0px rgb(var(--block-sdw-clr) / 0.5);
+	}
+
+	& .prompt-header {
+		display: flex;
+		column-gap: 0.5em;
+
+		& input[type="url"],
+		& input[type="text"] {
+			border-radius: 0.5em;
+			border: var(--border);
+			padding: 0.4em;
+		}
+
+		input[type="url"] {
+			display: block;
+		}
+
+		& .row {
+			display: flex;
+		}
+	}
+
+	& section {
+		width: 60vw;
+		min-height: 6lh;
+	}
+
+	& .send-btn {
+		position: absolute;
+		bottom: 0.5em;
+		right: 0.5em;
+	}
+}
+
+pipeline-container {
+	display: block;
+	width: 80%;
+	margin-inline: auto;
+	margin-top: 1em;
+	background-color: light-dark(whitesmoke, hsl(0, 0%, 10%));
+}
+
+pipeline-list {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 1em;
+	padding: 0.5em;
+}
+
+pipeline-card {
+	border-radius: 0.5em;
+	box-shadow: var(--card);
+	background-color: light-dark(white, black);
+
+	& .pipeline-name {
+		padding: 0.2em;
+		box-shadow: var(--card);
+		background-color: light-dark(white, hsl(0, 0%, 10%));
+	}
+
+	&.checked {
+		border: 4px groove red;
+	}
+
+	& pipeline-diagram {
+		padding: 0.5em;
+		display: flex;
+		flex-direction: column;
+	}
+
+	& action-menu {
+		position: relative;
+		&:focus-within menu {
+			scale: 1;
+		}
+
+		& menu {
+			position: absolute;
+			box-shadow: var(--card);
+			background-color: light-dark(white, hsl(0, 0%, 10%));
+
+			& li {
+				display: flex;
+				justify-content: space-between;
+				padding: 0.5em;
+				box-shadow: var(--card);
+				background-color: light-dark(white, hsl(0, 0%, 10%));
+
+				&:not(:last-child) {
+					border-bottom: var(--border);
+				}
+			}
+		}
+	}
+}
+
+pipeline-action-bar {
+	display: flex;
+	justify-content: space-between;
+	padding: 0.5em;
+	box-shadow: var(--card);
+	background-color: light-dark(white, hsl(0, 0%, 10%));
+}
+
+pipelines-drawerpanel {
+	height: 100%;
+	min-width: 30%;
+	max-width: 50%;
+	padding: 0;
+	flex-direction: column;
+	row-gap: 0.5em;
+	translate: -100% 0;
+	transition: translate 200ms ease-out;
+
+	&:popover-open {
+		display: flex;
+		translate: 0 0;
+	}
+}
