@@ -4,7 +4,7 @@
 	"offline_enabled": true,
 	"name": "GhostPipes",
 	"short_name": "GhostPipes",
-	"version": "0.0.1",
+	"version": "0.0.2",
 	"description": "Yahoo Pipes returns from the dead - AI-powered data pipelines",
 	"author": "Brahmastra Techeq",
 	"icons": {

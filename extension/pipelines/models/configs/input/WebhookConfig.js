@@ -55,8 +55,16 @@ export class WebhookConfig extends BaseConfig {
 		};
 	}
 
+	validate() {
+		const errors = super.validate();
+		if (!this.webhookId) errors.push("Webhook ID is required");
+		return errors;
+	}
+
 	/** @returns {string} Human-readable summary */
 	getSummary() {
-		return `Webhook ID: ...${this.webhookId.slice(-6)}`;
+		const id = this.webhookId.slice(-8);
+		const secured = this.secret ? " 🔒" : "";
+		return `${this.method} webhook ...${id}${secured}`;
 	}
 }

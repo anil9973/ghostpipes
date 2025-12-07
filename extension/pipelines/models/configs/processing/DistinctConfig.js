@@ -74,7 +74,21 @@ export class DistinctConfig extends BaseConfig {
 		};
 	}
 
+	validate() {
+		const errors = super.validate();
+		if (this.scope === DeduplicateScope.FIELD && this.fields.length === 0) {
+			errors.push("At least one field is required for field scope");
+		}
+		return errors;
+	}
+
 	getSummary() {
-		return "Distinct values";
+		if (this.scope === DeduplicateScope.FIELD && this.fields.length > 0) {
+			const fields = this.fields.slice(0, 2).join(", ");
+			const more = this.fields.length > 2 ? `...` : "";
+			const sorted = this.sort !== SortOrder.NONE ? ` sorted ${this.sort}` : "";
+			return `Distinct ${fields}${more}${sorted}`.slice(0, 120);
+		}
+		return `Distinct values (full match)`;
 	}
 }

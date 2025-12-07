@@ -1,6 +1,5 @@
-import { html } from "../../../../lib/om.compact.js";
+import { react } from "../../../../lib/om.compact.js";
 import { CtmElemNames } from "../../../js/constant.js";
-
 import { PipeNode } from "../../../models/PipeNode.js";
 import { PipeNodeHeader } from "./pipe-node-header.js";
 
@@ -16,16 +15,14 @@ export class PipelineNodeBox extends HTMLElement {
 	/** @param {PipeNode} pipeNode */
 	constructor(pipeNode) {
 		super();
-		this.pipeNode = pipeNode;
+		this.pipeNode = react(pipeNode);
 	}
 
-	#initResizeObserver() {
+	/* initResizeObserver() {
 		// Detects when the node changes size
-		this.resizeObserver = new ResizeObserver(() =>
-			this.dispatchEvent(new CustomEvent("node-resize", { bubbles: true }))
-		);
+		this.resizeObserver = new ResizeObserver(() => fireEvent(this.parentElement, "nodenoderesizedrag"));
 		this.resizeObserver.observe(this);
-	}
+	} */
 
 	onPointerDown(evt) {
 		if (evt.target.closest("svg")) return;
@@ -45,7 +42,7 @@ export class PipelineNodeBox extends HTMLElement {
 			this.style.left = `${evt.clientX - parentRect.left - this.dragOffset.x}px`;
 			this.style.top = `${evt.clientY - parentRect.top - this.dragOffset.y}px`;
 			// Notify parent to redraw pipes
-			this.dispatchEvent(new CustomEvent("node-drag", { bubbles: true }));
+			fireEvent(this.parentElement, "nodedrag");
 		} else this.#handleHover(evt);
 	}
 
@@ -62,10 +59,10 @@ export class PipelineNodeBox extends HTMLElement {
 		this.dispatchEvent(new CustomEvent("port-drag-start", { bubbles: true, detail: detail }));
 	}
 
-	#attachListeners() {
-		this.addEventListener("pointerdown", this.onPointerDown);
-		this.addEventListener("pointermove", this.onPointerMove);
-		this.addEventListener("pointerup", this.onPointerUp);
+	attachListeners() {
+		$on(this, "pointerdown", this.onPointerDown);
+		$on(this, "pointermove", this.onPointerMove);
+		$on(this, "pointerup", this.onPointerUp);
 		// --- Port Dragging Logic ---
 		this.plusBtn.addEventListener("pointerdown", this.onPlusBtnPointerDown.bind(this));
 	}
@@ -135,11 +132,7 @@ export class PipelineNodeBox extends HTMLElement {
 		const existingIndex = this.sockets[side].indexOf(pipeId);
 		let index = existingIndex;
 		let count = this.sockets[side].length;
-
-		if (index === -1) {
-			index = count;
-			count++;
-		}
+		index === -1 && ((index = count), count++);
 
 		// Even distribution formula
 		const step = rect.width / (count + 1);
@@ -158,15 +151,20 @@ export class PipelineNodeBox extends HTMLElement {
 		this.plusBtn.className = "port-trigger";
 		this.plusBtn.textContent = "✚";
 
+		const nodeHeader = new PipeNodeHeader(this.pipeNode);
+		// $on(nodeHeader, "update", callback);
+		$on(nodeHeader, "delete", () => fireEvent(this.parentElement, "nodedelete", this.pipeNode.id));
+
 		const blockquote = document.createElement("blockquote");
 		blockquote.textContent = this.pipeNode.summary;
-		return [this.plusBtn, new PipeNodeHeader(this.pipeNode), blockquote];
+		this.pipeNode["$on"]("summary", () => (blockquote.textContent = this.pipeNode.summary));
+		return [this.plusBtn, nodeHeader, blockquote];
 	}
 
 	connectedCallback() {
 		this.replaceChildren(...this.render());
-		this.#attachListeners();
-		this.#initResizeObserver();
+		this.attachListeners();
+		// this.initResizeObserver();
 	}
 }
 

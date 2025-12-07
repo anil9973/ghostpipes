@@ -38,9 +38,10 @@ export class PipelineEditor {
 
 	#setupEvents() {
 		// Listen for internal node events
-		this.pipeCanvas.addEventListener("node-drag", this.renderPipes.bind(this));
-		this.pipeCanvas.addEventListener("node-resize", this.renderPipes.bind(this));
-		this.pipeCanvas.addEventListener("port-drag-start", (e) => this.#startPipeDrag(e["detail"]));
+		this.pipeCanvas.addEventListener("nodedrag", this.renderPipes.bind(this));
+		this.pipeCanvas.addEventListener("noderesize", this.renderPipes.bind(this));
+		this.pipeCanvas.addEventListener("nodedelete", (e) => this.deleteNode(e["detail"]));
+		this.pipeCanvas.addEventListener("port-drag-start", (e) => this.startPipeDrag(e["detail"]));
 
 		addEventListener("pointermove", this.onPointerMove.bind(this));
 		addEventListener("pointerup", this.onPointerUp.bind(this));
@@ -60,7 +61,7 @@ export class PipelineEditor {
 			if (!pipelineId) return;
 			globalThis.pipelineId = pipelineId;
 			location.search = "?p=" + pipelineId;
-		} else pipedb.savePipeNode(pipeNode);
+		} else await pipedb.savePipeNode(pipeNode);
 
 		const node = this.addNode(pipeNode);
 		fireEvent(node.children[1], "openconfigpopup");
@@ -96,7 +97,7 @@ export class PipelineEditor {
 		setTimeout(() => this.renderPipes(), 0);
 	}
 
-	#startPipeDrag(detail) {
+	startPipeDrag(detail) {
 		this.dragState = {
 			active: true,
 			node: detail.node,
@@ -189,6 +190,35 @@ export class PipelineEditor {
 
 		this.pipes.push(pipe);
 		pipedb.savePipe(pipe);
+		this.renderPipes();
+	}
+
+	/** Deletes a node and all connected pipes */
+	deleteNode(nodeId) {
+		// 1. Find all pipes connected to this node
+		const pipesToRemove = this.pipes.filter((p) => p.sourceId === nodeId || p.targetId === nodeId);
+
+		// 2. Clean up connections on the OTHER nodes
+		// (If we delete Node A, we must tell Node B to free up its socket)
+		pipesToRemove.forEach((pipe) => {
+			const otherNodeId = pipe.sourceId === nodeId ? pipe.targetId : pipe.sourceId;
+			const otherNode = this.nodes.get(otherNodeId);
+
+			otherNode && otherNode.removeConnection(pipe.id);
+		});
+
+		// 3. Remove pipes from data model
+		this.pipes = this.pipes.filter((p) => p.sourceId !== nodeId && p.targetId !== nodeId);
+
+		// 4. Remove Node from DOM and Map
+		const node = this.nodes.get(nodeId);
+		if (node) {
+			node.remove(); // DOM removal
+			this.nodes.delete(nodeId); // Map removal
+			pipedb.removePipeNode(nodeId);
+		}
+
+		// 5. Redraw SVG to remove the ghost pipes
 		this.renderPipes();
 	}
 

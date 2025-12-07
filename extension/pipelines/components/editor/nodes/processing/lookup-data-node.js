@@ -2,6 +2,7 @@ import { LookupConfig } from "../../../../models/configs/processing/LookupConfig
 import { html, react, map } from "../../../../../lib/om.compact.js";
 import { PipeNode } from "../../../../models/PipeNode.js";
 import { NodeConfigHeader } from "../config-node-header.js";
+import { ConfigErrorBox } from "../config-error-box.js";
 
 export class LookupDataNodePopup extends HTMLElement {
 	/** @param {PipeNode} pipeNode */
@@ -9,9 +10,10 @@ export class LookupDataNodePopup extends HTMLElement {
 		super();
 		this.popover = "";
 		this.className = "node-config-popup";
-		this.pipeNode = react(pipeNode);
+		this.pipeNode = pipeNode;
 		/** @type {LookupConfig}  */
 		this.config = pipeNode.config;
+		this.errors = react([]);
 	}
 
 	ensureEmptyRows() {
@@ -34,17 +36,22 @@ export class LookupDataNodePopup extends HTMLElement {
 	}
 
 	async handleSave() {
+		this.errors.splice(0, this.errors.length, ...this.config.validate());
+		if (this.errors.length !== 0) return;
+		/* this.pipeNode.summary = this.config.getSummary();
 		const config = Object.assign({}, this.config);
-		await pipedb.updateNodeConfig(config, this.pipeNode.id);
+		await pipedb.updateNodeConfig(this.pipeNode.id, config,  this.pipeNode.summary);;
 		this.config.headers = this.config.headers.filter((h) => h.key.trim() !== "");
 		this.config.queryParams = this.config.queryParams.filter((q) => q.key.trim() !== "");
 
-		fireEvent(this, "save-node-config", this.pipeNode);
+		fireEvent(this, "savenodeconfig", this.pipeNode);
 		this.hidePopover();
-		this.ensureEmptyRows();
+		this.ensureEmptyRows(); */
 	}
 
-	onClosedPopover() {}
+	onClosedPopover() {
+		// TODO validate
+	}
 
 	render() {
 		return html` <header>
@@ -77,7 +84,7 @@ export class LookupDataNodePopup extends HTMLElement {
 							? html`
 									<label>
 										<div>Request URL</div>
-										<div class="row url-input">
+										<div class="select-input">
 											<select .value=${() => this.config.requestMethod}>
 												<option value="GET">GET</option>
 											</select>
@@ -166,7 +173,7 @@ export class LookupDataNodePopup extends HTMLElement {
 	connectedCallback() {
 		const header = new NodeConfigHeader({ icon: "lookup-large", title: "Lookup" });
 		header.addEventListener("update", this.handleSave.bind(this));
-		this.replaceChildren(header, this.render());
+		this.replaceChildren(header, this.render(), new ConfigErrorBox(this.errors));
 		this.showPopover();
 		$on(this, "toggle", (evt) => evt.newState === "closed" && this.onClosedPopover());
 	}

@@ -72,7 +72,18 @@ export class IntersectConfig extends BaseConfig {
 		};
 	}
 
+	validate() {
+		const errors = super.validate();
+		if (this.compareBy === IntersectCompareBy.FIELD && !this.field) {
+			errors.push("Field is required for field-based comparison");
+		}
+		return errors;
+	}
+
 	getSummary() {
-		return "Intersect Data";
+		if (this.compareBy === IntersectCompareBy.FIELD && this.field) {
+			return `Find common items by ${this.field} (output: ${this.outputFrom})`.slice(0, 120);
+		}
+		return `Find common items (full match, output: ${this.outputFrom})`;
 	}
 }

@@ -3,6 +3,7 @@ import { html, react, map } from "../../../../../lib/om.compact.js";
 import { PipeNode } from "../../../../models/PipeNode.js";
 import { NodeConfigHeader } from "../config-node-header.js";
 import { pipedb } from "../../../../db/pipeline-db.js";
+import { ConfigErrorBox } from "../config-error-box.js";
 
 export class StringBuilderDataNodePopup extends HTMLElement {
 	/** @param {PipeNode} pipeNode */
@@ -10,9 +11,10 @@ export class StringBuilderDataNodePopup extends HTMLElement {
 		super();
 		this.popover = "";
 		this.className = "node-config-popup";
-		this.pipeNode = react(pipeNode);
+		this.pipeNode = pipeNode;
 		/** @type {StringBuilderConfig}  */
 		this.config = pipeNode.config;
+		this.errors = react([]);
 		this.ensureEmptyRow();
 	}
 
@@ -34,15 +36,29 @@ export class StringBuilderDataNodePopup extends HTMLElement {
 	}
 
 	async handleSave() {
-		const config = Object.assign({}, this.config);
-		await pipedb.updateNodeConfig(config, this.pipeNode.id);
-		this.config.parts = this.config.parts.filter((p) => p.value.trim() !== "");
-		fireEvent(this, "save-node-config", this.pipeNode);
-		this.hidePopover();
-		this.ensureEmptyRow();
+		try {
+			this.config.parts = this.config.parts.filter((p) => p.value.trim() !== "");
+			this.errors.splice(0, this.errors.length, ...this.config.validate());
+			if (this.errors.length !== 0) return;
+			this.pipeNode.summary = this.config.getSummary();
+
+			const config = Object.assign({}, this.config);
+			//prettier-ignore
+			config.parts = Object.assign([], this.config.parts.filter((part) => Object.assign({}, part)));
+
+			await pipedb.updateNodeConfig(this.pipeNode.id, config, this.pipeNode.summary);
+			fireEvent(this, "savenodeconfig", this.pipeNode);
+			this.hidePopover();
+			this.ensureEmptyRow();
+		} catch (error) {
+			console.error(error);
+			notify(error.message, "error");
+		}
 	}
 
-	onClosedPopover() {}
+	onClosedPopover() {
+		// TODO validate
+	}
 
 	render() {
 		return html`<section>
@@ -60,12 +76,7 @@ export class StringBuilderDataNodePopup extends HTMLElement {
 						${map(
 							this.config.parts,
 							(part, index) =>
-								new StringPartRow(
-									part,
-									this.pipeNode.properties,
-									() => this.handleRemoveRow(index),
-									index === this.config.parts.length - 1
-								)
+								new StringPartRow(part, this.pipeNode.properties, this.handleRemoveRow.bind(this, index))
 						)}
 					</tbody>
 				</table>
@@ -80,7 +91,7 @@ export class StringBuilderDataNodePopup extends HTMLElement {
 	connectedCallback() {
 		const header = new NodeConfigHeader({ icon: "string-builder", title: "String Builder" });
 		header.addEventListener("update", this.handleSave.bind(this));
-		this.replaceChildren(header, this.render());
+		this.replaceChildren(header, this.render(), new ConfigErrorBox(this.errors));
 		this.showPopover();
 		$on(this, "toggle", (evt) => evt.newState === "closed" && this.onClosedPopover());
 	}
@@ -94,7 +105,6 @@ export class StringPartRow extends HTMLTableRowElement {
 		this.part = part;
 		this.properties = properties;
 		this.onDelete = onDelete;
-		this.isLast = isLast;
 	}
 
 	render() {
@@ -115,17 +125,15 @@ export class StringPartRow extends HTMLTableRowElement {
 
 		const cell3 =
 			this.part.type === "property"
-				? html`
-						<input type="text" placeholder="value" list=${datalistId} .value=${() => this.part.value} />
-						<datalist id=${datalistId}>${map(this.properties, (p) => html`<option value=${p}></option>`)}</datalist>
-				  `
+				? html`<input type="text" placeholder="value" list=${datalistId} .value=${() => this.part.value} />
+						<datalist id=${datalistId}>${map(this.properties, (p) => html`<option value=${p}></option>`)}</datalist> `
 				: html` <input type="text" placeholder="value" .value=${() => this.part.value} /> `;
 		this.insertCell().appendChild(cell3);
 
 		// Delete button
 		const cell4 = html` <button
 			class="icon-btn delete-btn"
-			style="${() => (this.isLast && !this.part.value ? "visibility:hidden" : "")}">
+			style="visibility:${() => (this.part.value ? "visible" : "hidden")}">
 			<svg class="icon"><use href="/assets/icons.svg#delete"></use></svg>
 		</button>`;
 		this.insertCell().appendChild(cell4);

@@ -18,13 +18,11 @@ export const WatchType = {
 /**
  * Configuration for file watch input node
  * Monitors a directory for file changes and triggers pipeline execution
- *
  * @extends BaseConfig
  */
 export class FileWatchConfig extends BaseConfig {
 	/**
 	 * Create a file watch configuration
-	 *
 	 * @param {Object} [init={}] - Initial configuration values
 	 * @param {FileSystemDirectoryHandle} [init.directoryHandle] - File system directory handle
 	 * @param {string} [init.directoryName] - Human-readable directory name
@@ -47,11 +45,7 @@ export class FileWatchConfig extends BaseConfig {
 		this.watchType = init.watchType || WatchType.MODIFIED;
 	}
 
-	/**
-	 * Get the schema definition for validation
-	 *
-	 * @returns {Object} Schema object with field definitions
-	 */
+	/** @returns {Object} Schema object with field definitions Get the schema definition for validation */
 	getSchema() {
 		return {
 			directoryName: {
@@ -76,12 +70,20 @@ export class FileWatchConfig extends BaseConfig {
 		};
 	}
 
-	/**
-	 * Get a human-readable summary of the configuration
-	 *
-	 * @returns {string} Summary text
-	 */
+	validate() {
+		const errors = super.validate();
+		if (!this.directoryName && !this.directoryHandle) errors.push("Directory name or handle is required");
+
+		if (this.watchMimeTypes.length === 0) errors.push("At least one MIME type to watch is required");
+
+		return errors;
+	}
+
+	/** @returns {string} Summary text Get a human-readable summary of the configuration */
 	getSummary() {
-		return this.directoryName ? `Watching: ${this.directoryName}` : "No directory selected";
+		if (!this.directoryName) return "No directory selected";
+		const types = this.watchMimeTypes.length;
+		const event = this.watchType.toUpperCase();
+		return `Watch ${this.directoryName} (${event}, ${types} type${types !== 1 ? "s" : ""})`.slice(0, 120);
 	}
 }

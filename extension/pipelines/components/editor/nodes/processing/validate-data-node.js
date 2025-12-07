@@ -7,6 +7,7 @@ import { html, react, map } from "../../../../../lib/om.compact.js";
 import { PipeNode } from "../../../../models/PipeNode.js";
 import { NodeConfigHeader } from "../config-node-header.js";
 import { pipedb } from "../../../../db/pipeline-db.js";
+import { ConfigErrorBox } from "../config-error-box.js";
 
 export class ValidateDataNodePopup extends HTMLElement {
 	/** @param {PipeNode} pipeNode */
@@ -14,9 +15,10 @@ export class ValidateDataNodePopup extends HTMLElement {
 		super();
 		this.popover = "";
 		this.className = "node-config-popup";
-		this.pipeNode = react(pipeNode);
+		this.pipeNode = pipeNode;
 		/** @type {ValidateConfig}  */
 		this.config = pipeNode.config;
+		this.errors = react([]);
 		this.ensureEmptyRow();
 	}
 
@@ -24,9 +26,7 @@ export class ValidateDataNodePopup extends HTMLElement {
 		const list = this.config.rules;
 		const last = list[list.length - 1];
 
-		if (!last || last.field !== "" || last.value !== "") {
-			list.push(new ValidationRule());
-		}
+		if (!last || last.field !== "") list.push(new ValidationRule());
 	}
 
 	handleRowInput(index) {
@@ -39,15 +39,29 @@ export class ValidateDataNodePopup extends HTMLElement {
 	}
 
 	async handleSave() {
-		const config = Object.assign({}, this.config);
-		await pipedb.updateNodeConfig(config, this.pipeNode.id);
-		this.config.rules = this.config.rules.filter((r) => r.field.trim() !== "");
-		fireEvent(this, "save-node-config", this.pipeNode);
-		this.hidePopover();
-		this.ensureEmptyRow();
+		try {
+			this.config.rules = this.config.rules.filter((r) => r.field.trim() !== "");
+			this.errors.splice(0, this.errors.length, ...this.config.validate());
+			if (this.errors.length !== 0) return;
+			this.pipeNode.summary = this.config.getSummary();
+
+			const config = Object.assign({}, this.config);
+			//prettier-ignore
+			config.rules = Object.assign( [], this.config.rules.map((rule) => Object.assign({}, rule)) );
+			await pipedb.updateNodeConfig(this.pipeNode.id, config, this.pipeNode.summary);
+
+			fireEvent(this, "savenodeconfig", this.pipeNode);
+			this.hidePopover();
+			this.ensureEmptyRow();
+		} catch (error) {
+			console.error(error);
+			notify(error.message, "error");
+		}
 	}
 
-	onClosedPopover() {}
+	onClosedPopover() {
+		// TODO validate
+	}
 
 	render() {
 		return html`<section>
@@ -96,7 +110,7 @@ export class ValidateDataNodePopup extends HTMLElement {
 	connectedCallback() {
 		const header = new NodeConfigHeader({ icon: "validate", title: "Validate" });
 		header.addEventListener("update", this.handleSave.bind(this));
-		this.replaceChildren(header, this.render());
+		this.replaceChildren(header, this.render(), new ConfigErrorBox(this.errors));
 		this.showPopover();
 		$on(this, "toggle", (evt) => evt.newState === "closed" && this.onClosedPopover());
 	}
@@ -110,7 +124,6 @@ export class ValidateRuleRow extends HTMLTableRowElement {
 		this.rule = rule;
 		this.properties = properties;
 		this.onDelete = onDelete;
-		this.isLast = isLast;
 	}
 
 	render() {
@@ -138,20 +151,18 @@ export class ValidateRuleRow extends HTMLTableRowElement {
 		// Range OR normal value input (conditional)
 		const cell4 =
 			this.rule.rule === "range"
-				? html`
-						<div class="range-inputs">
-							<input type="number" placeholder="min" .value=${() => this.rule.min} />
-							<span>-</span>
-							<input type="number" placeholder="max" .value=${() => this.rule.max} />
-						</div>
-				  `
+				? html`<div class="range-inputs">
+						<input type="number" placeholder="min" .value=${() => this.rule.min} />
+						<span>-</span>
+						<input type="number" placeholder="max" .value=${() => this.rule.max} />
+				  </div> `
 				: html` <input type="text" placeholder="value" .value=${() => this.rule.value} /> `;
 		this.insertCell().appendChild(cell4);
 
 		// Delete button
 		const cell5 = html` <button
 			class="icon-btn delete-btn"
-			style="${() => (this.isLast && !this.rule.field ? "visibility:hidden" : "")}">
+			style="visibility:${() => (this.rule.field ? "visible" : "hidden")}">
 			<svg class="icon"><use href="/assets/icons.svg#delete"></use></svg>
 		</button>`;
 		this.insertCell().appendChild(cell5);

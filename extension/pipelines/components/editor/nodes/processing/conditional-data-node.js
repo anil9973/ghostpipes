@@ -4,6 +4,7 @@ import { html, react, map } from "../../../../../lib/om.compact.js";
 import { PipeNode } from "../../../../models/PipeNode.js";
 import { NodeConfigHeader } from "../config-node-header.js";
 import { pipedb } from "../../../../db/pipeline-db.js";
+import { ConfigErrorBox } from "../config-error-box.js";
 
 export class ConditionalDataNodePopup extends HTMLElement {
 	/** @param {PipeNode} pipeNode */
@@ -11,9 +12,10 @@ export class ConditionalDataNodePopup extends HTMLElement {
 		super();
 		this.popover = "";
 		this.className = "node-config-popup";
-		this.pipeNode = react(pipeNode);
+		this.pipeNode = pipeNode;
 		/** @type {ConditionConfig}  */
 		this.config = pipeNode.config;
+		this.errors = react([]);
 		this.ensureEmptyRow();
 	}
 
@@ -35,15 +37,29 @@ export class ConditionalDataNodePopup extends HTMLElement {
 	}
 
 	async handleSave() {
-		const config = Object.assign({}, this.config);
-		await pipedb.updateNodeConfig(config, this.pipeNode.id);
-		this.config.rules = this.config.rules.filter((r) => r.field.trim() !== "");
-		fireEvent(this, "save-node-config", this.pipeNode);
-		this.hidePopover();
-		this.ensureEmptyRow();
+		try {
+			this.config.rules = this.config.rules.filter((r) => r.field.trim() !== "");
+			this.errors.splice(0, this.errors.length, ...this.config.validate());
+			if (this.errors.length !== 0) return;
+			this.pipeNode.summary = this.config.getSummary();
+
+			const config = Object.assign({}, this.config);
+			//prettier-ignore
+			config.rules = Object.assign([], this.config.rules.map((rule) => Object.assign({}, rule)));
+			await pipedb.updateNodeConfig(this.pipeNode.id, config, this.pipeNode.summary);
+
+			fireEvent(this, "savenodeconfig", this.pipeNode);
+			this.ensureEmptyRow();
+			this.hidePopover();
+		} catch (error) {
+			console.error(error);
+			notify(error.message, "error");
+		}
 	}
 
-	onClosedPopover() {}
+	onClosedPopover() {
+		// TODO validate
+	}
 
 	render() {
 		return html`<section>
@@ -68,23 +84,15 @@ export class ConditionalDataNodePopup extends HTMLElement {
 					</thead>
 					<tbody>
 						${map(
-							() => this.config.rules,
+							this.config.rules,
 							(rule, index) =>
-								new ConditionalRuleRow(
-									rule,
-									this.pipeNode.properties,
-									() => this.handleRemoveRow(index),
-									index === this.config.rules.length - 1
-								)
+								new ConditionalRuleRow(rule, this.pipeNode.properties, () => this.handleRemoveRow(index))
 						)}
 					</tbody>
 				</table>
 
 				<datalist id="cond-props">
-					${map(
-						() => this.pipeNode.properties,
-						(prop) => html`<option value=${prop}></option>`
-					)}
+					${map(this.pipeNode.properties, (prop) => html`<option value=${prop}></option>`)}
 				</datalist>
 			</ul>
 		</section> `;
@@ -93,7 +101,7 @@ export class ConditionalDataNodePopup extends HTMLElement {
 	connectedCallback() {
 		const header = new NodeConfigHeader({ icon: "condition-simple", title: "Condition" });
 		header.addEventListener("update", this.handleSave.bind(this));
-		this.replaceChildren(header, this.render());
+		this.replaceChildren(header, this.render(), new ConfigErrorBox(this.errors));
 		this.showPopover();
 		$on(this, "toggle", (evt) => evt.newState === "closed" && this.onClosedPopover());
 	}
@@ -106,14 +114,12 @@ export class ConditionalRuleRow extends HTMLTableRowElement {
 	 * @param {Object} rule - Reactive rule object
 	 * @param {string[]} properties - List for autocomplete
 	 * @param {Function} onDelete - Callback for delete
-	 * @param {boolean} isLast - UI state
 	 */
-	constructor(rule, properties, onDelete, isLast) {
+	constructor(rule, properties, onDelete) {
 		super();
 		this.rule = rule;
 		this.properties = properties;
 		this.onDelete = onDelete;
-		this.isLast = isLast;
 	}
 
 	render() {
@@ -123,31 +129,27 @@ export class ConditionalRuleRow extends HTMLTableRowElement {
 
 		// Cell 2: Property Input + Datalist
 		const datalistId = `cond-props-${Math.random()}`;
-		const cell2 = html`
-			<input type="text" placeholder="field" list=${datalistId} .value=${() => this.rule.field} />
-			<datalist id=${datalistId}>${map(this.properties, (p) => html`<option value=${p}></option>`)}</datalist>
-		`;
+		const cell2 = html`<input type="text" placeholder="field" list=${datalistId} .value=${() => this.rule.field} />
+			<datalist id=${datalistId}>${map(this.properties, (p) => html`<option value=${p}></option>`)}</datalist>`;
 		this.insertCell().appendChild(cell2);
 
 		// Cell 3: Condition Operator
-		const cell3 = html`
-			<select .value=${() => this.rule.operator}>
-				<optgroup label="Comparison">
-					<option value=${ComparisonOperator.EQUALS}>=</option>
-					<option value=${ComparisonOperator.NOT_EQUALS}>!=</option>
-					<option value=${ComparisonOperator.GREATER_THAN}>&gt;</option>
-					<option value=${ComparisonOperator.GREATER_EQUAL}>&gt;=</option>
-					<option value=${ComparisonOperator.LESS_THAN}>&lt;</option>
-					<option value=${ComparisonOperator.LESS_EQUAL}>&lt;=</option>
-				</optgroup>
-				<optgroup label="String">
-					<option value=${ComparisonOperator.STARTS_WITH}>Starts With</option>
-					<option value=${ComparisonOperator.ENDS_WITH}>Ends With</option>
-					<option value=${ComparisonOperator.CONTAINS}>Contains</option>
-					<option value=${ComparisonOperator.MATCHES}>Regex Match</option>
-				</optgroup>
-			</select>
-		`;
+		const cell3 = html`<select .value=${() => this.rule.operator}>
+			<optgroup label="Comparison">
+				<option value=${ComparisonOperator.EQUALS}>=</option>
+				<option value=${ComparisonOperator.NOT_EQUALS}>!=</option>
+				<option value=${ComparisonOperator.GREATER_THAN}>&gt;</option>
+				<option value=${ComparisonOperator.GREATER_EQUAL}>&gt;=</option>
+				<option value=${ComparisonOperator.LESS_THAN}>&lt;</option>
+				<option value=${ComparisonOperator.LESS_EQUAL}>&lt;=</option>
+			</optgroup>
+			<optgroup label="String">
+				<option value=${ComparisonOperator.STARTS_WITH}>Starts With</option>
+				<option value=${ComparisonOperator.ENDS_WITH}>Ends With</option>
+				<option value=${ComparisonOperator.CONTAINS}>Contains</option>
+				<option value=${ComparisonOperator.MATCHES}>Regex Match</option>
+			</optgroup>
+		</select>`;
 		this.insertCell().appendChild(cell3);
 
 		// Cell 4: Value Input
@@ -155,13 +157,11 @@ export class ConditionalRuleRow extends HTMLTableRowElement {
 		this.insertCell().appendChild(cell4);
 
 		// Cell 5: Delete Button
-		const cell5 = html`
-			<button
-				class="icon-btn delete-btn"
-				style="${() => (this.isLast && !this.rule.field ? "visibility:hidden" : "")}">
-				<svg class="icon"><use href="/assets/icons.svg#delete"></use></svg>
-			</button>
-		`;
+		const cell5 = html`<button
+			class="icon-btn delete-btn"
+			style="visibility:${() => (this.rule.field ? "visible" : "hidden")}">
+			<svg class="icon"><use href="/assets/icons.svg#delete"></use></svg>
+		</button>`;
 		this.insertCell().appendChild(cell5);
 	}
 

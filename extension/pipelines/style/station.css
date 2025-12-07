@@ -107,8 +107,9 @@ pipeline-list {
 	padding: 0.5em;
 }
 
-pipeline-card {
-	min-width: 24ch;
+pipeline-card,
+recommend-pipeline-card {
+	min-width: 28ch;
 	border-radius: 0.5em;
 	box-shadow: var(--card);
 	background-color: light-dark(white, black);
@@ -117,7 +118,8 @@ pipeline-card {
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
-		padding: 0.4em;
+		padding: 0.4em 0.8em;
+		border-radius: 0.5em 0.5em 0 0;
 		box-shadow: var(--card);
 		background-color: light-dark(white, hsl(0, 0%, 10%));
 		position: relative;
@@ -129,12 +131,15 @@ pipeline-card {
 			}
 		}
 
-		& input[type="radio"] {
-			position: absolute;
-			top: -0.5em;
-			left: -0.5em;
-			opacity: 0;
-			transition: opacity 200ms ease-out;
+		& .status {
+			display: block;
+			font-size: 0.9rem;
+
+			& select {
+				padding-block: 0;
+				color: inherit;
+				background-color: inherit;
+			}
 		}
 
 		& .pipeline-name {
@@ -183,6 +188,16 @@ pipeline-card {
 				}
 			}
 		}
+	}
+}
+
+recommend-pipeline-card {
+	& input[type="radio"] {
+		position: absolute;
+		top: -0.5em;
+		left: -0.5em;
+		opacity: 0;
+		transition: opacity 200ms ease-out;
 	}
 }
 
@@ -257,7 +272,7 @@ pipeline-action-bar {
 pipelines-drawer-panel {
 	height: 100%;
 	min-width: 30%;
-	max-width: 50%;
+	max-width: 45%;
 	padding: 0;
 	flex-direction: column;
 	row-gap: 0.5em;
@@ -267,5 +282,38 @@ pipelines-drawer-panel {
 	&:popover-open {
 		display: flex;
 		translate: 0 0;
+	}
+
+	& drawer-search-bar {
+		display: block;
+		width: 80%;
+		margin-inline: auto;
+		border-radius: 1em;
+		padding: 0.4em;
+		box-shadow: var(--card);
+		background-color: light-dark(white, rgb(26, 25, 25));
+		position: relative;
+
+		& select {
+			border: none;
+			padding: 0.6em;
+			background-color: transparent;
+		}
+
+		& search {
+			--block-sdw-clr: 160 160 160;
+			display: flex;
+			border-radius: 1em;
+			background-color: light-dark(white, black);
+			box-shadow: inset -3px 3px 3px 0px rgb(var(--block-sdw-clr) / 0.5),
+				inset 3px -3px 3px 0px rgb(var(--block-sdw-clr) / 0.5);
+		}
+
+		& input {
+			flex-grow: 1;
+			border: none;
+			padding: 0.6em;
+			background-color: transparent;
+		}
 	}
 }

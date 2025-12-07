@@ -3,6 +3,7 @@ import { html, react, map } from "../../../../../lib/om.compact.js";
 import { PipeNode } from "../../../../models/PipeNode.js";
 import { NodeConfigHeader } from "../config-node-header.js";
 import { pipedb } from "../../../../db/pipeline-db.js";
+import { ConfigErrorBox } from "../config-error-box.js";
 
 export class UnionDataNodePopup extends HTMLElement {
 	/** @param {PipeNode} pipeNode */
@@ -10,19 +11,30 @@ export class UnionDataNodePopup extends HTMLElement {
 		super();
 		this.popover = "";
 		this.className = "node-config-popup";
-		this.pipeNode = react(pipeNode);
+		this.pipeNode = pipeNode;
 		/** @type {UnionConfig}  */
 		this.config = pipeNode.config;
+		this.errors = react([]);
 	}
 
 	async handleSave() {
-		const config = Object.assign({}, this.config);
-		await pipedb.updateNodeConfig(config, this.pipeNode.id);
-		fireEvent(this, "save-node-config", this.pipeNode);
-		this.hidePopover();
+		try {
+			this.errors.splice(0, this.errors.length, ...this.config.validate());
+			if (this.errors.length !== 0) return;
+			this.pipeNode.summary = this.config.getSummary();
+			const config = Object.assign({}, this.config);
+			await pipedb.updateNodeConfig(this.pipeNode.id, config, this.pipeNode.summary);
+			fireEvent(this, "savenodeconfig", this.pipeNode);
+			this.hidePopover();
+		} catch (error) {
+			console.error(error);
+			notify(error.message, "error");
+		}
 	}
 
-	onClosedPopover() {}
+	onClosedPopover() {
+		// TODO validate
+	}
 
 	render() {
 		return html`<section>
@@ -59,7 +71,7 @@ export class UnionDataNodePopup extends HTMLElement {
 	connectedCallback() {
 		const header = new NodeConfigHeader({ icon: "union-large", title: "Union" });
 		header.addEventListener("update", this.handleSave.bind(this));
-		this.replaceChildren(header, this.render());
+		this.replaceChildren(header, this.render(), new ConfigErrorBox(this.errors));
 		this.showPopover();
 		$on(this, "toggle", (evt) => evt.newState === "closed" && this.onClosedPopover());
 	}

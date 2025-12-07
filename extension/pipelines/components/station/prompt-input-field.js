@@ -1,7 +1,7 @@
 import { RecommendationService } from "../../services/recommendation/index.js";
 import { html, react } from "../../../lib/om.compact.js";
 import { db, Store } from "../../db/db.js";
-import { RecommendPipelineContainer } from "./recommend-pipeline-container.js";
+import { RecommendPipelineContainer } from "./recommend-container.js";
 
 /** PromptInputField - AI prompt input with trigger configuration */
 export class PromptInputField extends HTMLElement {

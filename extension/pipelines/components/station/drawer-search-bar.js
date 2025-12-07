@@ -1,34 +1,44 @@
-// import { html } from "../../../lib/om.compact.js";
+import { html } from "../../../lib/om.compact.js";
+import { TriggerType } from "../../models/Pipeline.js";
 
-// export class DrawerSearchBar extends HTMLElement {
-// 	constructor() {
-// 		super();
-// 	}
+export class DrawerSearchBar extends HTMLElement {
+	constructor() {
+		super();
+	}
 
-// 	handleClose() {
-// 		this.hidePopover();
-// 	}
+	handleClose() {
+		this.hidePopover();
+	}
 
-// 	handleSearch() {}
+	searchPipelines() {
+		//TODO
+	}
 
-// 	render() {
-// 		return html`<div class="drawer-header">
-// 				<h2>My Pipelines</h2>
-// 				<button class="close-btn" @click=${this.handleClose.bind(this)} aria-label="Close drawer">✕</button>
-// 			</div>
+	onInput() {
+		if (this.timer) clearTimeout(this.timer), (this.timer = null);
+		this.timer = setTimeout(() => {}, 2000);
+	}
 
-// 			<div class="drawer-search">
-// 				<input
-// 					type="search"
-// 					@input=${this.handleSearch.bind(this)}
-// 					placeholder="Search pipelines..."
-// 					aria-label="Search pipelines" />
-// 			</div>`;
-// 	}
+	render() {
+		return html`<search>
+			<select>
+				<option value="${TriggerType.MANUAL}">Manual</option>
+				<option value="${TriggerType.WEBHOOK}">Webhook</option>
+				<option value="${TriggerType.SCHEDULE}">Schedule</option>
+				<option value="${TriggerType.FILE_WATCH}">File Watch</option>
+				<option value="${TriggerType.EVENT}">Event</option>
+			</select>
+			<input
+				type="search"
+				@input=${this.onInput.bind(this)}
+				placeholder="🔎 Search pipelines..."
+				aria-label="Search pipelines" />
+		</search>`;
+	}
 
-// 	connectedCallback() {
-// 		this.replaceChildren(this.render());
-// 	}
-// }
+	connectedCallback() {
+		this.replaceChildren(this.render());
+	}
+}
 
-// customElements.define("drawer-search-bar", DrawerSearchBar);
+customElements.define("drawer-search-bar", DrawerSearchBar);

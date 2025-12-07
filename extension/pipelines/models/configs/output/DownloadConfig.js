@@ -12,35 +12,76 @@ import { FormatOutput } from "../processing/FormatConfig.js";
  */
 export class DownloadConfig extends BaseConfig {
 	/**
-	 * @param {Object} init - Initial configuration
-	 * @param {string} [init.filename] - Name of the file to download
-	 * @param {string} [init.format] - Output format (json, csv, xml, text, custom)
+	 * @param {Object} init
+	 * @param {string} [init.folder] - nest folder name
+	 * @param {string} [init.filename] - Base filename or template
+	 * @param {string} [init.prefix] - Filename prefix (e.g., "report_")
+	 * @param {string} [init.suffix] - Filename suffix (e.g., "_final")
+	 * @param {boolean} [init.includeTimestamp] - Append timestamp
+	 * @param {string} [init.timestampFormat] - Timestamp format (iso, unix, custom)
+	 * @param {string} [init.replacePattern] - Regex pattern to replace
+	 * @param {string} [init.replaceWith] - Replacement string
+	 * @param {FormatOutput} [init.format] - Output format
 	 */
 	constructor(init = {}) {
 		super();
-		/** @type {string} Output filename */
-		this.filename = init.filename || "data.json";
-
-		/** @type {FormatOutput} File format for serialization */
+		/** @type {string} Output folder */
+		this.folder = init.folder || "";
+		this.filename = init.filename || "data";
+		this.prefix = init.prefix || "";
+		this.suffix = init.suffix || "";
+		this.includeTimestamp = init.includeTimestamp ?? false;
+		this.timestampFormat = init.timestampFormat || "iso"; // iso, unix, yyyymmdd
+		this.replacePattern = init.replacePattern || "";
+		this.replaceWith = init.replaceWith || "_";
 		this.format = init.format || FormatOutput.JSON;
 	}
 
-	getSchema() {
-		return {
-			filename: {
-				type: "string",
-				required: true,
-				minLength: 1,
-			},
-			format: {
-				type: "string",
-				required: false,
-				enum: Object.values(FormatOutput),
-			},
+	/** Build final filename with all transformations */
+	buildFilename() {
+		let name = this.filename;
+
+		// Apply regex replacement
+		if (this.replacePattern) {
+			const regex = new RegExp(this.replacePattern, "g");
+			name = name.replace(regex, this.replaceWith);
+		}
+
+		// Add prefix/suffix
+		name = `${this.prefix}${name}${this.suffix}`;
+
+		// Add timestamp
+		if (this.includeTimestamp) {
+			const ts =
+				this.timestampFormat === "unix"
+					? Date.now()
+					: this.timestampFormat === "yyyymmdd"
+					? new Date().toISOString().slice(0, 10).replace(/-/g, "")
+					: new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
+			name = `${name}_${ts}`;
+		}
+
+		// Add extension
+		const ext = this.getExtension();
+		return `${name}${ext}`;
+	}
+
+	getExtension() {
+		const extMap = {
+			[FormatOutput.JSON]: ".json",
+			[FormatOutput.CSV]: ".csv",
+			[FormatOutput.XML]: ".xml",
+			[FormatOutput.TEXT]: ".txt",
+			[FormatOutput.HTML]: ".html",
+			[FormatOutput.MARKDOWN]: ".md",
+			[FormatOutput.XLSX]: ".xlsx",
+			[FormatOutput.PDF]: ".pdf",
 		};
+		return extMap[this.format] || "";
 	}
 
 	getSummary() {
-		return `Download ${this.filename}`;
+		const example = this.buildFilename();
+		return `Download as ${example}`.slice(0, 120);
 	}
 }

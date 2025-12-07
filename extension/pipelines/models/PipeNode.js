@@ -1,8 +1,8 @@
 import { nanoid } from "../utils/common.js";
-import { BaseConfig } from "./BaseConfig.js";
 import { FileWatchConfig } from "./configs/input/FileWatchConfig.js";
 import { HttpRequestConfig } from "./configs/input/HttpRequestConfig.js";
 import { ManualInputConfig } from "./configs/input/ManualInputConfig.js";
+import { ScheduledHttpConfig } from "./configs/input/ScheduledConfig.js";
 import { WebhookConfig } from "./configs/input/WebhookConfig.js";
 import { DownloadConfig } from "./configs/output/DownloadConfig.js";
 import { FileAppendConfig } from "./configs/output/FileAppendConfig.js";
@@ -37,6 +37,8 @@ export const NodeType = Object.freeze({
 	MANUAL_INPUT: "manual_input",
 	HTTP_REQUEST: "http_request",
 	WEBHOOK: "webhook",
+	SCHEDULED_HTTP: "scheduled_http",
+	TAB_VISIT: "tab_visit",
 	FILE_WATCH: "file_watch",
 	SCHEDULED: "scheduled",
 	FILTER: "filter",
@@ -65,7 +67,6 @@ export const NodeType = Object.freeze({
 	DOWNLOAD: "download",
 	FILE_APPEND: "file_append",
 	HTTP_POST: "http_post",
-	SEND_EMAIL: "send_email",
 	COPY: "copy",
 	DRIVE_UPLOAD: "drive_upload",
 	EMAIL_SEND: "email_send",
@@ -119,7 +120,7 @@ export class PipeNode {
 		/** @type {string} */
 		this.id = init.id || nanoid();
 
-		/** @type {string} */
+		/** @type {NodeType} */
 		this.type = init.type || "manual_input";
 
 		/** @type {string} */
@@ -145,6 +146,7 @@ export class PipeNode {
 		[NodeType.MANUAL_INPUT]: "Manual Input",
 		[NodeType.HTTP_REQUEST]: "HTTP Request",
 		[NodeType.WEBHOOK]: "Webhook",
+		[NodeType.TAB_VISIT]: "Tab Visit",
 		[NodeType.FILE_WATCH]: "File Watcher",
 		[NodeType.FILTER]: "Filter",
 		[NodeType.TRANSFORM]: "Transform",
@@ -172,13 +174,13 @@ export class PipeNode {
 		[NodeType.DOWNLOAD]: "Download",
 		[NodeType.FILE_APPEND]: "File Append",
 		[NodeType.HTTP_POST]: "HTTP POST",
-		[NodeType.SEND_EMAIL]: "Send Email",
 		[NodeType.EXTENSION_DATA]: "Extension Data",
 	});
 
 	static configs = Object.freeze({
 		[NodeType.MANUAL_INPUT]: (init) => new ManualInputConfig(init),
 		[NodeType.HTTP_REQUEST]: (init) => new HttpRequestConfig(init),
+		[NodeType.SCHEDULED_HTTP]: (init) => new ScheduledHttpConfig(init),
 		[NodeType.WEBHOOK]: (init) => new WebhookConfig(init),
 		[NodeType.FILE_WATCH]: (init) => new FileWatchConfig(init),
 		[NodeType.FILTER]: (init) => new FilterConfig(init),
@@ -207,7 +209,7 @@ export class PipeNode {
 		[NodeType.DOWNLOAD]: (init) => new DownloadConfig(init),
 		[NodeType.FILE_APPEND]: (init) => new FileAppendConfig(init),
 		[NodeType.HTTP_POST]: (init) => new HttpPostConfig(init),
-		[NodeType.SEND_EMAIL]: (init) => new SendEmailConfig(init),
+		[NodeType.EMAIL_SEND]: (init) => new SendEmailConfig(init),
 	});
 
 	getDefaultTitle(type) {
@@ -215,7 +217,7 @@ export class PipeNode {
 	}
 
 	createConfig(type, initConfig = {}) {
-		return PipeNode.configs[type] ? PipeNode.configs[type]() : initConfig;
+		return PipeNode.configs[type] ? PipeNode.configs[type](initConfig) : initConfig;
 	}
 
 	get properties() {

@@ -2,6 +2,7 @@ import { html, react, map } from "../../../../../lib/om.compact.js";
 import { pipedb } from "../../../../db/pipeline-db.js";
 import { SortConfig } from "../../../../models/configs/processing/SortConfig.js";
 import { PipeNode } from "../../../../models/PipeNode.js";
+import { ConfigErrorBox } from "../config-error-box.js";
 import { NodeConfigHeader } from "../config-node-header.js";
 
 export class SortDataNodePopup extends HTMLElement {
@@ -10,9 +11,10 @@ export class SortDataNodePopup extends HTMLElement {
 		super();
 		this.popover = "";
 		this.className = "node-config-popup";
-		this.pipeNode = react(pipeNode);
+		this.pipeNode = pipeNode;
 		/** @type {SortConfig}  */
 		this.config = pipeNode.config;
+		this.errors = react([]);
 
 		this.ensureEmptyRow();
 	}
@@ -35,16 +37,29 @@ export class SortDataNodePopup extends HTMLElement {
 	}
 
 	async handleSave() {
-		const config = Object.assign({}, this.config);
-		await pipedb.updateNodeConfig(config, this.pipeNode.id);
-		this.config.criteria = this.config.criteria.filter((c) => c.field.trim() !== "");
-		fireEvent(this, "save-node-config", this.pipeNode);
+		try {
+			this.config.criteria = this.config.criteria.filter((c) => c.field.trim() !== "");
+			this.errors.splice(0, this.errors.length, ...this.config.validate());
+			if (this.errors.length !== 0) return;
+			this.pipeNode.summary = this.config.getSummary();
 
-		this.hidePopover();
-		this.ensureEmptyRow();
+			const config = Object.assign({}, this.config);
+			//prettier-ignore
+			config.criteria = Object.assign([], this.config.criteria.map((c) => Object.assign({}, c)));
+
+			await pipedb.updateNodeConfig(this.pipeNode.id, config, this.pipeNode.summary);
+			fireEvent(this, "savenodeconfig", this.pipeNode);
+			this.ensureEmptyRow();
+			this.hidePopover();
+		} catch (error) {
+			console.error(error);
+			notify(error.message, "error");
+		}
 	}
 
-	onClosedPopover() {}
+	onClosedPopover() {
+		// TODO validate
+	}
 
 	render() {
 		return html`<section>
@@ -61,14 +76,7 @@ export class SortDataNodePopup extends HTMLElement {
 					<tbody>
 						${map(
 							this.config.criteria,
-							(item, index) =>
-								new SortRuleRow(
-									item,
-									this.pipeNode.properties,
-									() => this.handleRemoveRow(index),
-									index === this.config.criteria.length - 1,
-									index === 0
-								)
+							(item, index) => new SortRuleRow(item, this.pipeNode.properties, this.handleRemoveRow.bind(this, index))
 						)}
 					</tbody>
 				</table>
@@ -82,7 +90,7 @@ export class SortDataNodePopup extends HTMLElement {
 	connectedCallback() {
 		const header = new NodeConfigHeader({ icon: "sort", title: "Sort" });
 		header.addEventListener("update", this.handleSave.bind(this));
-		this.replaceChildren(header, this.render());
+		this.replaceChildren(header, this.render(), new ConfigErrorBox(this.errors));
 		this.showPopover();
 		$on(this, "toggle", (evt) => evt.newState === "closed" && this.onClosedPopover());
 	}
@@ -96,40 +104,36 @@ export class SortRuleRow extends HTMLTableRowElement {
 		this.criteria = criteria;
 		this.properties = properties;
 		this.onDelete = onDelete;
-		this.isLast = isLast;
-		this.isFirst = isFirst;
 	}
 
 	render() {
 		// Radio: show first priority (disabled)
-		const cell1 = html` <input type="radio" disabled ?checked=${() => this.isFirst} /> `;
+		const cell1 = html` <input type="radio" disabled ?checked=${() => this.criteria.enabled} /> `;
 		this.insertCell().appendChild(cell1);
 
 		// Field input + datalist
 		const datalistId = `sort-props-${Math.random()}`;
-		const cell2 = html`
-			<input type="text" placeholder="field" list=${datalistId} .value=${() => this.criteria.field} />
-			<datalist id=${datalistId}>${map(this.properties, (p) => html`<option value=${p}></option>`)}</datalist>
-		`;
+		const cell2 = html`<input
+				type="text"
+				placeholder="field"
+				list=${datalistId}
+				.value=${() => this.criteria.field} />
+			<datalist id=${datalistId}>${map(this.properties, (p) => html`<option value=${p}></option>`)}</datalist>`;
 		this.insertCell().appendChild(cell2);
 
 		// Order select
-		const cell3 = html`
-			<select .value=${() => this.criteria.order}>
-				<option value="ascending">Ascending</option>
-				<option value="descending">Descending</option>
-			</select>
-		`;
+		const cell3 = html`<select .value=${() => this.criteria.order}>
+			<option value="ascending">Ascending</option>
+			<option value="descending">Descending</option>
+		</select>`;
 		this.insertCell().appendChild(cell3);
 
 		// Delete button
-		const cell4 = html`
-			<button
-				class="icon-btn delete-btn"
-				style="${() => (this.isLast && !this.criteria.field ? "visibility:hidden" : "")}">
-				<svg class="icon"><use href="/assets/icons.svg#delete"></use></svg>
-			</button>
-		`;
+		const cell4 = html`<button
+			class="icon-btn delete-btn"
+			style="visibility:${() => (this.criteria.field ? "visible" : "hidden")}">
+			<svg class="icon"><use href="/assets/icons.svg#delete"></use></svg>
+		</button>`;
 		this.insertCell().appendChild(cell4);
 	}
 

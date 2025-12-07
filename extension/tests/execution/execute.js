@@ -12,11 +12,11 @@ import { SAMPLE_PIPELINES } from "./samples/seed-data.js";
 	// Test scraper.js
 	const scrapperId =
 		(await db.get(Store.Pipelines, TODO_TRANSFORM_PIPELINE.id))?.id ??
-		(await await db.put(Store.Pipelines, TODO_TRANSFORM_PIPELINE));
+		(await db.put(Store.Pipelines, TODO_TRANSFORM_PIPELINE));
 
 	const sampleId2 =
 		(await db.get(Store.Pipelines, SAMPLE_PIPELINES[1].id))?.id ??
-		(await await db.put(Store.Pipelines, SAMPLE_PIPELINES[1]));
+		(await db.put(Store.Pipelines, SAMPLE_PIPELINES[1]));
 
 	console.log(sampleId2);
 	// debugger;

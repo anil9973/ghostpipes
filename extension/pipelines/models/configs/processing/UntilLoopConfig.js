@@ -63,7 +63,23 @@ export class UntilLoopConfig extends BaseConfig {
 		};
 	}
 
+	validate() {
+		const errors = super.validate();
+		if (!this.condition) {
+			errors.push("Condition is required");
+		}
+		if (this.maxIterations < 1) {
+			errors.push("Max iterations must be at least 1");
+		}
+		if (this.timeout < 1) {
+			errors.push("Timeout must be at least 1 second");
+		}
+		return errors;
+	}
+
 	getSummary() {
-		return `Until loop (max ${this.maxIterations} runs)`;
+		const cond = this.condition ? this.condition.slice(0, 40) : "no condition";
+		const timeout = this.timeout !== 300 ? ` ${this.timeout}s` : "";
+		return `Until ${cond} (max ${this.maxIterations}${timeout})`.slice(0, 120);
 	}
 }

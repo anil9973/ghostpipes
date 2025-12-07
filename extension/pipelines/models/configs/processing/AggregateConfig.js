@@ -80,8 +80,37 @@ export class AggregateConfig extends BaseConfig {
 		};
 	}
 
+	validate() {
+		const errors = super.validate();
+		if (this.aggregations.length === 0) {
+			errors.push("At least one aggregation is required");
+		}
+		this.aggregations.forEach((agg, i) => {
+			if (!agg.field) errors.push(`Aggregation ${i + 1}: field is required`);
+			if (!agg.alias) errors.push(`Aggregation ${i + 1}: alias is required`);
+		});
+		if (!this.groupByKey && this.groupByFields.length === 0) {
+			errors.push("Either groupByKey must be true or groupByFields must be provided");
+		}
+		return errors;
+	}
+
 	getSummary() {
 		const count = this.aggregations.filter((a) => a.field).length;
-		return `${count} aggregation${count !== 1 ? "s" : ""}`;
+
+		if (count === 0) return "No aggregations configured";
+
+		// Show first aggregation as example
+		const first = this.aggregations.find((a) => a.field);
+		if (!first) return `${count} aggregation${count !== 1 ? "s" : ""}`;
+
+		const groupBy = this.groupByKey
+			? "by key"
+			: this.groupByFields.length > 0
+			? `by ${this.groupByFields[0]}${this.groupByFields.length > 1 ? "..." : ""}`
+			: "no grouping";
+
+		const more = count > 1 ? ` +${count - 1} more` : "";
+		return `${first.operation.toUpperCase()}(${first.field}) ${groupBy}${more}`.slice(0, 120);
 	}
 }

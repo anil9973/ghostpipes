@@ -69,7 +69,21 @@ export class LoopConfig extends BaseConfig {
 		};
 	}
 
+	validate() {
+		const errors = super.validate();
+		if (!this.loopOver) {
+			errors.push("Loop field is required");
+		}
+		if (this.maxIterations < 1) {
+			errors.push("Max iterations must be at least 1");
+		}
+		return errors;
+	}
+
 	getSummary() {
-		return this.loopOver ? `Loop over ${this.loopOver}` : "Loop";
+		if (!this.loopOver) return "Loop not configured";
+		const mode = this.outputMode === LoopOutputMode.EMIT ? "emit each" : "collect all";
+		const max = this.maxIterations !== 1000 ? ` (max ${this.maxIterations})` : "";
+		return `Loop ${this.loopOver} (${mode}${max})`.slice(0, 120);
 	}
 }

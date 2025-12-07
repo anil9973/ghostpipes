@@ -1,4 +1,4 @@
-import { DefNode, HttpNodes, ManualInputNodes, StandaloneNodes } from "../../../models/DefNode.js";
+import { AutoTriggerNodes, DefNode, HttpNodes, ManualInputNodes } from "../../../models/DefNode.js";
 import { html } from "../../../../lib/om.compact.js";
 import { DefNodeCard } from "./node-card.js";
 
@@ -40,7 +40,12 @@ export class InputResources extends HTMLDetailsElement {
 					</ul>
 				</details>
 
-				${StandaloneNodes.map((nodeType) => new DefNodeCard(new DefNode(nodeType)))}
+				<details>
+					<summary>Auto trigger</summary>
+					<ul>
+						${AutoTriggerNodes.map((nodeType) => new DefNodeCard(new DefNode(nodeType)))}
+					</ul>
+				</details>
 			</ul>`;
 	}
 

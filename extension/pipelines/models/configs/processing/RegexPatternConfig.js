@@ -20,11 +20,22 @@ export class RegexPattern {
 	 * @param {boolean} [init.enabled]
 	 */
 	constructor(init = {}) {
+		/** @type {string} */
 		this.field = init.field || "";
+
+		/** @type {string} */
 		this.pattern = init.pattern || "";
+
+		/** @type {string} */
 		this.replacement = init.replacement || "";
+
+		/** @type {boolean} */
 		this.extract = init.extract ?? false;
+
+		/** @type {boolean} */
 		this.enabled = init.enabled ?? true;
+
+		/** @type {{ g: boolean, m: boolean, s: boolean, i: boolean, u: boolean, y: boolean }} */
 		this.flags = {
 			g: init.flags?.g ?? true,
 			m: init.flags?.m ?? false,
@@ -72,8 +83,30 @@ export class RegexPatternConfig extends BaseConfig {
 		};
 	}
 
+	validate() {
+		const errors = super.validate();
+		if (this.patterns.length === 0) {
+			errors.push("At least one regex pattern is required");
+		}
+		this.patterns.forEach((pattern, i) => {
+			if (!pattern.field) errors.push(`Pattern ${i + 1}: field is required`);
+			if (!pattern.pattern) errors.push(`Pattern ${i + 1}: pattern is required`);
+			// Test if pattern is valid regex
+			try {
+				new RegExp(pattern.pattern);
+			} catch (e) {
+				errors.push(`Pattern ${i + 1}: invalid regex - ${e.message}`);
+			}
+		});
+		return errors;
+	}
+
 	getSummary() {
-		const count = this.patterns.filter((p) => p.field).length;
-		return `${count} regex pattern${count !== 1 ? "s" : ""}`;
+		const count = this.patterns.filter((p) => p.field && p.pattern).length;
+		if (count === 0) return "No patterns configured";
+		const first = this.patterns.find((p) => p.field && p.pattern);
+		const action = first?.extract ? "Extract" : "Replace";
+		const more = count > 1 ? ` +${count - 1}` : "";
+		return `${action} in ${first?.field}${more}`.slice(0, 120);
 	}
 }

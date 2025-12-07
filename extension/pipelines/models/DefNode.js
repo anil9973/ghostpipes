@@ -4,7 +4,9 @@ import { NodeType } from "./PipeNode.js";
 export const NodeTypeTitles = Object.freeze({
 	[NodeType.MANUAL_INPUT]: "Manual Input",
 	[NodeType.HTTP_REQUEST]: "HTTP Request",
+	[NodeType.SCHEDULED_HTTP]: "Scheduled HTTP",
 	[NodeType.WEBHOOK]: "Webhook",
+	[NodeType.TAB_VISIT]: "Tab Visit",
 	[NodeType.FILE_WATCH]: "File Watcher",
 	[NodeType.FILTER]: "Filter",
 	[NodeType.TRANSFORM]: "Transform",
@@ -32,7 +34,6 @@ export const NodeTypeTitles = Object.freeze({
 	[NodeType.DOWNLOAD]: "Download",
 	[NodeType.FILE_APPEND]: "File Append",
 	[NodeType.HTTP_POST]: "HTTP POST",
-	[NodeType.SEND_EMAIL]: "Send Email",
 	[NodeType.EXTENSION_DATA]: "Extension Data",
 	[NodeType.COPY]: "Copy",
 	[NodeType.DRIVE_UPLOAD]: "Upload to Drive",
@@ -47,9 +48,9 @@ export const NodeTypeSubtitles = Object.freeze({
 	[NodeType.EXTENSION_DATA]: "Selected data from extension",
 
 	// HTTP & triggers
+	[NodeType.SCHEDULED_HTTP]: "Fetch data on a recurring schedule",
 	[NodeType.HTTP_REQUEST]: "One-time fetch",
-	[NodeType.SCHEDULED]: "Scheduled (interval/cron)",
-	[NodeType.CONDITION]: "Conditional (on tab visit)",
+	[NodeType.TAB_VISIT]: "Auto trigger on tab visit",
 
 	// Standalone event receivers
 	[NodeType.FILE_WATCH]: "Monitor folder for new files",
@@ -62,6 +63,7 @@ export const NodeTypeSubtitles = Object.freeze({
 	[NodeType.SPLIT]: "Divide data",
 	[NodeType.DEDUPLICATE]: "Remove duplicates",
 	[NodeType.VALIDATE]: "Check data quality",
+	[NodeType.CONDITION]: "Conditional",
 	[NodeType.AGGREGATE]: "Calculate stats (SUM, AVG, COUNT, MIN, MAX)",
 	[NodeType.LOOKUP]: "Lookup/Enrich",
 	[NodeType.PARSE]: "Extract from JSON/HTML/CSV",
@@ -77,17 +79,12 @@ export const NodeTypeSubtitles = Object.freeze({
 
 	// File operations
 	[NodeType.FILE_APPEND]: "Append to File",
-
 	// Custom logic
 	[NodeType.CUSTOM_CODE]: "Custom code (JavaScript)",
-
 	// Outputs
 	[NodeType.DOWNLOAD]: "Download file",
-	[NodeType.SEND_EMAIL]: "Send as Email",
-
 	// AI
 	[NodeType.AI_PROCESSOR]: "Ask AI to build pipeline",
-
 	[NodeType.COPY]: "Write to clipboard",
 	[NodeType.DRIVE_UPLOAD]: "Upload to online drive (GDrive, Dropbox, etc.)",
 	[NodeType.EMAIL_SEND]: "Send email",
@@ -99,10 +96,15 @@ export const NodeTypeSubtitles = Object.freeze({
 export const ManualInputNodes = Object.freeze([NodeType.MANUAL_INPUT, NodeType.EXTENSION_DATA]);
 
 /** HTTP & external fetch triggers */
-export const HttpNodes = Object.freeze([NodeType.HTTP_REQUEST, NodeType.HTTP_POST, NodeType.CONDITION]);
+export const HttpNodes = Object.freeze([NodeType.HTTP_REQUEST, NodeType.HTTP_POST]);
 
 /** Autonomous nodes (no upstream input needed) */
-export const StandaloneNodes = Object.freeze([NodeType.FILE_WATCH, NodeType.WEBHOOK]);
+export const AutoTriggerNodes = Object.freeze([
+	NodeType.SCHEDULED_HTTP,
+	NodeType.TAB_VISIT,
+	NodeType.FILE_WATCH,
+	NodeType.WEBHOOK,
+]);
 
 /** Most common ETL data operations */
 export const CommonDataOps = Object.freeze([

@@ -39,9 +39,25 @@ export class ConditionConfig extends BaseConfig {
 		};
 	}
 
+	validate() {
+		const errors = super.validate();
+		if (this.rules.length === 0) {
+			errors.push("At least one condition rule is required");
+		}
+		this.rules.forEach((rule, i) => {
+			if (!rule.field) errors.push(`Rule ${i + 1}: field is required`);
+			if (!rule.operator) errors.push(`Rule ${i + 1}: operator is required`);
+		});
+		return errors;
+	}
+
 	/** @returns {string} Human-readable summary */
 	getSummary() {
 		const count = this.rules.filter((r) => r.field).length;
-		return `If ${count} rule${count !== 1 ? "s" : ""} match (${this.logic})`;
+		if (count === 0) return "No conditions set";
+		const first = this.rules.find((r) => r.field);
+		const preview = first ? `${first.field} ${first.operator} ${first.value}` : "";
+		const more = count > 1 ? ` +${count - 1}` : "";
+		return `If ${preview}${more} (${this.logic})`.slice(0, 120);
 	}
 }

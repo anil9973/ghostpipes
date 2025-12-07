@@ -81,12 +81,22 @@ export class SplitConfig extends BaseConfig {
 
 	validate() {
 		const errors = super.validate();
-		if (this.method === SplitMethod.FIELD && !this.splitField)
+		if (this.method === SplitMethod.FIELD && !this.splitField) {
 			errors.push("Split field is required for field method");
+		}
+		if (this.method === SplitMethod.BATCH && this.chunkSize < 1) {
+			errors.push("Chunk size must be at least 1");
+		}
 		return errors;
 	}
 
 	getSummary() {
-		return this.splitField ? `Split by ${this.splitField}` : "No field selected";
+		if (this.method === SplitMethod.FIELD && this.splitField) {
+			return `Split by ${this.splitField} (${this.strategy})`.slice(0, 120);
+		}
+		if (this.method === SplitMethod.BATCH) {
+			return `Split into batches of ${this.chunkSize}`;
+		}
+		return `Split (${this.method}, ${this.strategy})`;
 	}
 }

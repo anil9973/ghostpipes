@@ -1,6 +1,7 @@
 import { html, react, map } from "../../../../../lib/om.compact.js";
 import { pipedb } from "../../../../db/pipeline-db.js";
 import { PipeNode } from "../../../../models/PipeNode.js";
+import { ConfigErrorBox } from "../config-error-box.js";
 import { NodeConfigHeader } from "../config-node-header.js";
 
 export class SchemaValidatorDataNodePopup extends HTMLElement {
@@ -9,8 +10,9 @@ export class SchemaValidatorDataNodePopup extends HTMLElement {
 		super();
 		this.popover = "";
 		this.className = "node-config-popup";
-		this.pipeNode = react(pipeNode);
+		this.pipeNode = pipeNode;
 		this.config = pipeNode.config;
+		this.errors = react([]);
 		this.ensureEmptyRow();
 	}
 
@@ -36,15 +38,22 @@ export class SchemaValidatorDataNodePopup extends HTMLElement {
 	}
 
 	async handleSave() {
+		this.errors.splice(0, this.errors.length, ...this.config.validate());
+		if (this.errors.length !== 0) return;
+		//TODO
+		/* this.config.fields = this.config.fields.filter((f) => f.name.trim() !== "");
+
 		const config = Object.assign({}, this.config);
-		await pipedb.updateNodeConfig(config, this.pipeNode.id);
-		this.config.fields = this.config.fields.filter((f) => f.name.trim() !== "");
-		fireEvent(this, "save-node-config", this.pipeNode);
+		config.fields = Object.assign([], this.config.fields);
+		await pipedb.updateNodeConfig(this.pipeNode.id, config,  this.pipeNode.summary);;
+		fireEvent(this, "savenodeconfig", this.pipeNode);
 		this.hidePopover();
-		this.ensureEmptyRow();
+		this.ensureEmptyRow(); */
 	}
 
-	onClosedPopover() {}
+	onClosedPopover() {
+		// TODO validate
+	}
 
 	render() {
 		return html`<section>
@@ -139,7 +148,7 @@ export class SchemaValidatorDataNodePopup extends HTMLElement {
 	connectedCallback() {
 		const header = new NodeConfigHeader({ icon: "schema-validator", title: "Schema Validator" });
 		header.addEventListener("update", this.handleSave.bind(this));
-		this.replaceChildren(header, this.render());
+		this.replaceChildren(header, this.render(), new ConfigErrorBox(this.errors));
 		this.showPopover();
 		$on(this, "toggle", (evt) => evt.newState === "closed" && this.onClosedPopover());
 	}

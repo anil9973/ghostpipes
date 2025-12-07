@@ -1,5 +1,6 @@
 import { PipelineEditor } from "../../services/Plumbing/PipelineEditor.js";
 import { Pipeline } from "../../models/Pipeline.js";
+import { PipeNode } from "../../models/PipeNode.js";
 import { html } from "../../../lib/om.compact.js";
 import { pipedb } from "../../db/pipeline-db.js";
 import { db, Store } from "../../db/db.js";
@@ -44,9 +45,10 @@ export class PipelineCanvas extends HTMLElement {
 		this.pipelineEditor = new PipelineEditor(this);
 		if (globalThis.pipelineId !== "new-pipeline") {
 			const pipeline = await db.get(Store.Pipelines, globalThis.pipelineId);
-			pipeline
-				? this.pipelineEditor.insertPipeNodes(pipeline)
-				: ((globalThis.pipelineId = "new-pipeline"), (location.search = "?p=new-pipeline"));
+			if (pipeline) {
+				pipeline.nodes = pipeline.nodes.map((node) => new PipeNode(node));
+				this.pipelineEditor.insertPipeNodes(pipeline);
+			} else (globalThis.pipelineId = "new-pipeline"), (location.search = "?p=new-pipeline");
 		}
 
 		$on(this, "insertpipeline", async ({ detail }) => {

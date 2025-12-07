@@ -112,7 +112,7 @@ export class HttpPostConfig extends BaseConfig {
 			contentType: {
 				type: "string",
 				required: false,
-				enum: ["json", "form"],
+				enum: Object.values(HttpContentType),
 			},
 			bodyFields: {
 				type: "array",
@@ -125,7 +125,19 @@ export class HttpPostConfig extends BaseConfig {
 		};
 	}
 
+	validate() {
+		const errors = super.validate();
+		this.url ? URL.canParse(this.url) || errors.push("URL must be valid") : errors.push("URL is required");
+		if (this.contentType === HttpContentType.FORM_URLENCODED && this.bodyFields.length === 0)
+			errors.push("At least one body field is required for form content type");
+
+		return errors;
+	}
+
 	getSummary() {
-		return this.url ? `${this.method} ${this.url}` : "No URL configured";
+		if (!this.url) return "No URL configured";
+		const url = this.url.length > 50 ? this.url.slice(0, 47) + "..." : this.url;
+		const contentType = Object.keys(HttpContentType).find((k) => HttpContentType[k] === this.contentType) || "JSON";
+		return `${this.method} ${url} (${contentType})`.slice(0, 120);
 	}
 }

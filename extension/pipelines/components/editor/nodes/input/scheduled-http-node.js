@@ -1,18 +1,19 @@
-import { HttpRequestConfig } from "../../../../models/configs/input/HttpRequestConfig.js";
+import { ScheduledHttpConfig, ScheduleFrequency } from "../../../../models/configs/input/ScheduledConfig.js";
 import { html, react, map } from "../../../../../lib/om.compact.js";
 import { NodeConfigHeader } from "../config-node-header.js";
 import { pipedb } from "../../../../db/pipeline-db.js";
 import { PipeNode } from "../../../../models/PipeNode.js";
 import { ConfigErrorBox } from "../config-error-box.js";
+import { KeyValueRow } from "./http-fetch-node.js";
 
-export class HttpFetchNodePopup extends HTMLElement {
+export class ScheduledHttpNodePopup extends HTMLElement {
 	/** @param {PipeNode} pipeNode */
 	constructor(pipeNode) {
 		super();
 		this.popover = "";
 		this.className = "node-config-popup";
 		this.pipeNode = pipeNode;
-		/** @type {HttpRequestConfig}  */
+		/** @type {ScheduledHttpConfig}  */
 		this.config = pipeNode.config;
 		this.errors = react([]);
 		this.ensureEmptyRows();
@@ -25,9 +26,7 @@ export class HttpFetchNodePopup extends HTMLElement {
 
 	ensureEmptyRow(list) {
 		const last = list[list.length - 1];
-		if (!last || last.key !== "" || last.value !== "") {
-			list.push({ key: "", value: "" });
-		}
+		if (!last || last.key !== "" || last.value !== "") list.push({ key: "", value: "" });
 	}
 
 	handleRowInput(list, index) {
@@ -69,6 +68,22 @@ export class HttpFetchNodePopup extends HTMLElement {
 	render() {
 		return html`<section>
 			<ul class="config-field-list">
+				<label>
+					<div>Schedule</div>
+					<div class="select-input">
+						<select .value=${() => this.config.method}>
+							<option value="${ScheduleFrequency.ONCE}">Once</option>
+							<option value="${ScheduleFrequency.MINUTELY}">Minutely</option>
+							<option value="${ScheduleFrequency.HOURLY}">Hourly</option>
+							<option value="${ScheduleFrequency.DAILY}">Daily</option>
+							<option value="${ScheduleFrequency.WEEKLY}">Weekly</option>
+							<option value="${ScheduleFrequency.MONTHLY}">Monthly</option>
+							<option value="${ScheduleFrequency.CUSTOM}">Custom</option>
+						</select>
+						<input type="text" />
+					</div>
+				</label>
+
 				<label>
 					<div>Request URL</div>
 					<div class="select-input">
@@ -133,7 +148,7 @@ export class HttpFetchNodePopup extends HTMLElement {
 	}
 
 	connectedCallback() {
-		const header = new NodeConfigHeader({ icon: "http-fetch", title: "HTTP Fetch" });
+		const header = new NodeConfigHeader({ icon: "schedule-http", title: "Schedule HTTP" });
 		header.addEventListener("update", this.handleSave.bind(this));
 		this.replaceChildren(header, this.render(), new ConfigErrorBox(this.errors));
 		this.showPopover();
@@ -141,44 +156,4 @@ export class HttpFetchNodePopup extends HTMLElement {
 	}
 }
 
-customElements.define("http-fetch-node-card", HttpFetchNodePopup);
-
-export class KeyValueRow extends HTMLTableRowElement {
-	/**
-	 * @param {Object} pair - Reactive object {key, value}
-	 * @param {Function} onDelete - Callback to remove row
-	 * @param {string} [keyPlaceholder="Key"]
-	 * @param {string} [valuePlaceholder="Value"]
-	 */
-	constructor(pair, onDelete, keyPlaceholder = "Key", valuePlaceholder = "Value") {
-		super();
-		this.pair = pair;
-		this.onDelete = onDelete;
-		this.keyPlaceholder = keyPlaceholder;
-		this.valuePlaceholder = valuePlaceholder;
-	}
-
-	render() {
-		// Cell 1: Key Input
-		const cell1 = html` <input type="text" .value=${() => this.pair.key} placeholder="${this.keyPlaceholder}" /> `;
-		this.insertCell().appendChild(cell1);
-
-		// Cell 2: Value Input
-		const cell2 = html`<input type="text" .value=${() => this.pair.value} placeholder="${this.valuePlaceholder}" />`;
-		this.insertCell().appendChild(cell2);
-
-		// Cell 3: Delete Button
-		const cell3 = html`<button
-			class="icon-btn delete-btn"
-			style="visibility:${() => (this.pair.key ? "" : "hidden")}">
-			<svg class="icon"><use href="/assets/icons.svg#delete"></use></svg>
-		</button>`;
-		this.insertCell().appendChild(cell3);
-	}
-
-	connectedCallback() {
-		this.render();
-	}
-}
-
-customElements.define("key-value-row", KeyValueRow, { extends: "tr" });
+customElements.define("schedule-http-node-card", ScheduledHttpNodePopup);

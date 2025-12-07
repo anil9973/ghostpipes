@@ -294,6 +294,8 @@ var extractor = {
 	},
 	extractReactfn(key, idx) {
 		if (this.strings[idx].endsWith("=") || this.strings[idx].endsWith(":")) this.setReactHolder(key, idx);
+		else if (this.strings[idx].endsWith('style="') || this.strings[idx].endsWith('class="'))
+			this.setMultiAttrValHolder(key, idx);
 		else if (this.strings[idx].endsWith(">")) childFrag.set(this.setComment(idx), key);
 		else if (this.strings[idx].trimEnd().endsWith(">")) childFrag.set(this.setComment(idx, "?^"), key);
 		else childFrag.set(this.setComment(idx, this.strings[idx].trimStart() || "?^"), key);
@@ -323,6 +325,12 @@ var extractor = {
 		const attrName = "%" + String(Math.random()).slice(9);
 		reactAttrs.set(attrName, key);
 		this.string += attrName + this.strings[idx + 1];
+	},
+	setMultiAttrValHolder(key, idx) {
+		//TODO ned to implement
+		const attrVal = "!" + String(Math.random()).slice(9);
+		reactAttrs.set(attrVal, key);
+		this.string += attrVal + this.strings[idx + 1];
 	},
 };
 var fragment = {

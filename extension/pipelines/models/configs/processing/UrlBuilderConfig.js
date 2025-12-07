@@ -65,7 +65,31 @@ export class UrlBuilderConfig extends BaseConfig {
 		};
 	}
 
+	validate() {
+		const errors = super.validate();
+		if (!this.baseUrl) {
+			errors.push("Base URL is required");
+		} else {
+			try {
+				new URL(this.baseUrl);
+			} catch {
+				errors.push("Base URL must be a valid URL");
+			}
+		}
+		return errors;
+	}
+
 	getSummary() {
-		return this.baseUrl || "URL Builder";
+		if (!this.baseUrl) return "No base URL";
+		const url = new URL(this.baseUrl).hostname;
+		const paths =
+			this.pathSegments.length > 0
+				? `/${this.pathSegments.length} path${this.pathSegments.length !== 1 ? "s" : ""}`
+				: "";
+		const params =
+			this.queryParams.length > 0
+				? ` +${this.queryParams.length} param${this.queryParams.length !== 1 ? "s" : ""}`
+				: "";
+		return `${url}${paths}${params}`.slice(0, 120);
 	}
 }

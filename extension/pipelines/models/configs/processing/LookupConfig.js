@@ -82,9 +82,23 @@ export class LookupConfig extends BaseConfig {
 		};
 	}
 
+	validate() {
+		const errors = super.validate();
+		if (this.source === LookupSource.API && !this.requestUrl) {
+			errors.push("Request URL is required for API lookup");
+		}
+		if (this.cacheTTL < 0) {
+			errors.push("Cache TTL must be non-negative");
+		}
+		return errors;
+	}
+
 	getSummary() {
-		return this.source === LookupSource.API && this.requestUrl
-			? `Lookup: ${this.requestMethod} ${this.requestUrl}`
-			: `Lookup from ${this.source}`;
+		if (this.source === LookupSource.API && this.requestUrl) {
+			const url = this.requestUrl.length > 40 ? this.requestUrl.slice(0, 37) + "..." : this.requestUrl;
+			return `Lookup ${this.requestMethod} ${url}`.slice(0, 120);
+		}
+		const cached = this.cacheResults ? " (cached)" : "";
+		return `Lookup from ${this.source}${cached}`;
 	}
 }

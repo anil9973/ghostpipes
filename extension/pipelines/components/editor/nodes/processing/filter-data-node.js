@@ -3,6 +3,7 @@ import { html, react, map } from "../../../../../lib/om.compact.js";
 import { PipeNode } from "../../../../models/PipeNode.js";
 import { NodeConfigHeader } from "../config-node-header.js";
 import { pipedb } from "../../../../db/pipeline-db.js";
+import { ConfigErrorBox } from "../config-error-box.js";
 
 export class Rule {
 	constructor() {
@@ -20,9 +21,10 @@ export class FilterDataNodePopup extends HTMLElement {
 		super();
 		this.popover = "";
 		this.className = "node-config-popup";
-		this.pipeNode = react(pipeNode);
+		this.pipeNode = pipeNode;
 		/** @type {FilterConfig}  */
 		this.config = pipeNode.config;
+		this.errors = react([]);
 		this.ensureEmptyRow();
 	}
 
@@ -43,18 +45,29 @@ export class FilterDataNodePopup extends HTMLElement {
 	}
 
 	async handleSave() {
-		const config = Object.assign({}, this.config);
-		await pipedb.updateNodeConfig(config, this.pipeNode.id);
-		const validRules = this.config.rules.filter((r) => r.field.trim() !== "");
-		this.config.rules = validRules;
+		try {
+			this.config.rules = this.config.rules.filter((r) => r.field.trim() !== "");
+			this.errors.splice(0, this.errors.length, ...this.config.validate());
+			if (this.errors.length !== 0) return;
+			this.pipeNode.summary = this.config.getSummary();
 
-		fireEvent(this, "save-node-config", this.pipeNode);
-		this.hidePopover();
+			const config = Object.assign({}, this.config);
+			//prettier-ignore
+			config.rules = Object.assign( [], this.config.rules.map((rule) => Object.assign({}, rule)) );
 
-		this.ensureEmptyRow();
+			await pipedb.updateNodeConfig(this.pipeNode.id, config, this.pipeNode.summary);
+			fireEvent(this, "savenodeconfig", this.pipeNode);
+			this.hidePopover();
+			this.ensureEmptyRow();
+		} catch (error) {
+			console.error(error);
+			notify(error.message, "error");
+		}
 	}
 
-	onClosedPopover() {}
+	onClosedPopover() {
+		// TODO validate
+	}
 
 	render() {
 		return html`
@@ -92,7 +105,7 @@ export class FilterDataNodePopup extends HTMLElement {
 									new FilterRuleRow(
 										rule,
 										this.pipeNode.properties,
-										() => this.handleRemoveRule(index),
+										this.handleRemoveRule.bind(this, index),
 										index === this.config.rules.length - 1 // isLast
 									)
 							)}
@@ -110,7 +123,7 @@ export class FilterDataNodePopup extends HTMLElement {
 	connectedCallback() {
 		const header = new NodeConfigHeader({ icon: "filter", title: "Filter Data" });
 		header.addEventListener("update", this.handleSave.bind(this));
-		this.replaceChildren(header, this.render());
+		this.replaceChildren(header, this.render(), new ConfigErrorBox(this.errors));
 		this.showPopover();
 		$on(this, "toggle", (evt) => evt.newState === "closed" && this.onClosedPopover());
 	}
@@ -124,7 +137,6 @@ export class FilterRuleRow extends HTMLTableRowElement {
 		this.rule = rule;
 		this.properties = properties;
 		this.onDelete = onDelete;
-		this.isLast = isLast;
 	}
 
 	render() {
@@ -166,7 +178,7 @@ export class FilterRuleRow extends HTMLTableRowElement {
 		// Delete button
 		const cell5 = html` <button
 			class="icon-btn delete-btn"
-			style="${() => (this.isLast && !this.rule.field ? "visibility:hidden" : "")}">
+			style="visibility:${() => (this.rule.field ? "visible" : "hidden")}">
 			<svg class="icon"><use href="/assets/icons.svg#delete"></use></svg>
 		</button>`;
 		this.insertCell().appendChild(cell5);

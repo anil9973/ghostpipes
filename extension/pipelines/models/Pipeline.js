@@ -1,12 +1,22 @@
 import { Pipe } from "./Pipe.js";
 import { PipeNode } from "./PipeNode.js";
 
+/** @enum {string} Pipeline trigger types */
+export const TriggerType = {
+	MANUAL: "manual", // User clicks run
+	WEBHOOK: "webhook", // HTTP webhook receives data
+	SCHEDULE: "schedule", // Time-based execution
+	FILE_WATCH: "file_watch", // File system changes
+	EVENT: "event", // Browser/extension events
+};
+
 export class Pipeline {
 	/**
 	 * @param {Object} data - Initial serialized pipeline state
 	 * @param {string} [data.id] - Unique pipeline identifier
 	 * @param {string} [data.title] - Pipeline title shown in the UI
 	 * @param {string} [data.summary] - Optional description of the pipeline purpose
+	 * @param {boolean} [data.enabled] - For autoTrigger
 	 * @param {{type: string, config: Object}} [data.trigger] - Execution trigger configuration
 	 * @param {PipeNode[]} [data.nodes] - List of node objects that perform actions
 	 * @param {Pipe[]} [data.pipes] - Visual + logical connections between nodes
@@ -23,7 +33,9 @@ export class Pipeline {
 		/** @type {string} Short description or notes */
 		this.summary = data.summary || "";
 
-		/** @type {{type: string, config: Object}} Trigger that starts pipeline execution */
+		this.enabled = data.enabled || true;
+
+		/** @type {{type: TriggerType, config: Object}} Trigger that starts pipeline execution */
 		this.trigger = data.trigger || { type: "manual", config: {} };
 
 		/** @type {PipeNode[]} Node components (steps) in the pipeline */

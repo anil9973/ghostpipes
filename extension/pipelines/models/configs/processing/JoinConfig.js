@@ -54,10 +54,19 @@ export class JoinConfig extends BaseConfig {
 		};
 	}
 
+	validate() {
+		const errors = super.validate();
+		if (!this.leftKey) errors.push("Left key is required");
+		if (!this.rightKey) errors.push("Right key is required");
+		return errors;
+	}
+
 	/** @returns {string} Human-readable summary */
 	getSummary() {
-		return this.leftKey && this.rightKey
-			? `${this.type.toUpperCase()} on ${this.leftKey} = ${this.rightKey}`
-			: "Join keys not set";
+		if (this.leftKey && this.rightKey) {
+			const type = this.type.toUpperCase();
+			return `${type} JOIN on ${this.leftKey} = ${this.rightKey}`.slice(0, 120);
+		}
+		return `${this.type.toUpperCase()} JOIN (keys not configured)`;
 	}
 }

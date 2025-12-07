@@ -3,6 +3,7 @@ import { html, react, map } from "../../../../../lib/om.compact.js";
 import { PipeNode } from "../../../../models/PipeNode.js";
 import { NodeConfigHeader } from "../config-node-header.js";
 import { pipedb } from "../../../../db/pipeline-db.js";
+import { ConfigErrorBox } from "../config-error-box.js";
 
 export class RegrexPatternDataNodePopup extends HTMLElement {
 	/** @param {PipeNode} pipeNode */
@@ -10,9 +11,10 @@ export class RegrexPatternDataNodePopup extends HTMLElement {
 		super();
 		this.popover = "";
 		this.className = "node-config-popup";
-		this.pipeNode = react(pipeNode);
+		this.pipeNode = pipeNode;
 		/** @type {RegexPatternConfig}  */
 		this.config = pipeNode.config;
+		this.errors = react([]);
 	}
 
 	ensureEmptyRow() {
@@ -33,16 +35,28 @@ export class RegrexPatternDataNodePopup extends HTMLElement {
 	}
 
 	async handleSave() {
-		const config = Object.assign({}, this.config);
-		await pipedb.updateNodeConfig(config, this.pipeNode.id);
-		this.config.patterns = this.config.patterns.filter((p) => p.field.trim() !== "");
-		fireEvent(this, "save-node-config", this.pipeNode);
+		try {
+			this.config.patterns = this.config.patterns.filter((p) => p.field.trim() !== "");
+			this.errors.splice(0, this.errors.length, ...this.config.validate());
+			if (this.errors.length !== 0) return;
+			this.pipeNode.summary = this.config.getSummary();
 
-		this.hidePopover();
-		this.ensureEmptyRow();
+			const config = Object.assign({}, this.config);
+			//prettier-ignore
+			config.patterns = Object.assign([], this.config.patterns.filter((pattern) => Object.assign({}, pattern)));
+			await pipedb.updateNodeConfig(this.pipeNode.id, config, this.pipeNode.summary);
+			fireEvent(this, "savenodeconfig", this.pipeNode);
+			this.ensureEmptyRow();
+			this.hidePopover();
+		} catch (error) {
+			console.error(error);
+			notify(error.message, "error");
+		}
 	}
 
-	onClosedPopover() {}
+	onClosedPopover() {
+		// TODO validate
+	}
 
 	render() {
 		return html`<section>
@@ -63,12 +77,7 @@ export class RegrexPatternDataNodePopup extends HTMLElement {
 						${map(
 							this.config.patterns,
 							(item, index) =>
-								new RegexRuleRow(
-									item,
-									this.pipeNode.properties,
-									() => this.handleRemoveRow(index),
-									index === this.config.patterns.length - 1
-								)
+								new RegexRuleRow(item, this.pipeNode.properties, this.handleRemoveRow.bind(this, index))
 						)}
 					</tbody>
 				</table>
@@ -82,7 +91,7 @@ export class RegrexPatternDataNodePopup extends HTMLElement {
 	connectedCallback() {
 		const header = new NodeConfigHeader({ icon: "regex", title: "Regex" });
 		header.addEventListener("update", this.handleSave.bind(this));
-		this.replaceChildren(header, this.render());
+		this.replaceChildren(header, this.render(), new ConfigErrorBox(this.errors));
 		this.showPopover();
 		$on(this, "toggle", (evt) => evt.newState === "closed" && this.onClosedPopover());
 	}
@@ -96,7 +105,6 @@ export class RegexRuleRow extends HTMLTableRowElement {
 		this.rule = rule;
 		this.properties = properties;
 		this.onDelete = onDelete;
-		this.isLast = isLast;
 	}
 
 	render() {
@@ -128,7 +136,7 @@ export class RegexRuleRow extends HTMLTableRowElement {
 		// Delete button
 		const cell6 = html` <button
 			class="icon-btn delete-btn"
-			style="${() => (this.isLast && !this.rule.field ? "visibility:hidden" : "")}">
+			style="visibility:${() => (this.rule.field ? "visible" : "hidden")}">
 			<svg class="icon"><use href="/assets/icons.svg#delete"></use></svg>
 		</button>`;
 		this.insertCell().appendChild(cell6);

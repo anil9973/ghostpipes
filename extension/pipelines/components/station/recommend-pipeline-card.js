@@ -4,7 +4,7 @@ import { ActionMenu } from "./action-menu.js";
 import { PipelineDiagram } from "./pipeline-diagram.js";
 
 /**PipelineCard - Visual card showing pipeline name and diagram */
-export class PipelineCard extends HTMLElement {
+export class RecommendPipelineCard extends HTMLElement {
 	/** @param {Pipeline} pipeline */
 	constructor(pipeline) {
 		super();
@@ -13,16 +13,8 @@ export class PipelineCard extends HTMLElement {
 
 	render() {
 		const cardHeader = html`<header>
-			<div>
-				<span class="pipeline-name"> ${() => this.pipeline?.title || "Untitled Pipeline"} </span>
-				<label class="status" style="color:${this.pipeline.enabled ? "lime" : "red"}">
-					<span>Status</span>
-					<select name="status">
-						<option value="enabled">Enabled</option>
-						<option value="disabled">Disabled</option>
-					</select>
-				</label>
-			</div>
+			<input type="radio" value="${this.pipeline.id}" name="select-pipeline" />
+			<span class="pipeline-name"> ${() => this.pipeline?.title || "Untitled Pipeline"} </span>
 			${new ActionMenu(this.pipeline.id)}
 		</header>`;
 		return [cardHeader, new PipelineDiagram(this.pipeline)];
@@ -33,4 +25,4 @@ export class PipelineCard extends HTMLElement {
 	}
 }
 
-customElements.define("pipeline-card", PipelineCard);
+customElements.define("recommend-pipeline-card", RecommendPipelineCard);

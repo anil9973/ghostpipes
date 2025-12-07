@@ -79,11 +79,27 @@ export class FilterConfig extends BaseConfig {
 		};
 	}
 
+	validate() {
+		const errors = super.validate();
+		if (this.rules.length === 0) {
+			errors.push("At least one filter rule is required");
+		}
+		this.rules.forEach((rule, i) => {
+			if (!rule.field) errors.push(`Rule ${i + 1}: field is required`);
+			if (rule.value === "" || rule.value === null || rule.value === undefined) {
+				errors.push(`Rule ${i + 1}: value is required`);
+			}
+		});
+		return errors;
+	}
+
 	/** @returns {string} Human-readable summary */
 	getSummary() {
 		const count = this.rules.filter((r) => r.field && r.value).length;
-		if (count === 0) return "No rules";
-		const logic = this.matchType === MatchType.ALL ? "AND" : "OR";
-		return `${this.mode.toUpperCase()} where (${count} rules via ${logic})`;
+		if (count === 0) return "No filter rules";
+		const first = this.rules.find((r) => r.field && r.value);
+		const preview = first ? `${first.field} ${first.operator} ${first.value}` : "";
+		const more = count > 1 ? ` +${count - 1}` : "";
+		return `${this.mode.toUpperCase()}: ${preview}${more} (${this.matchType})`.slice(0, 120);
 	}
 }

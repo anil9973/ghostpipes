@@ -64,7 +64,22 @@ export class CustomCodeConfig extends BaseConfig {
 		};
 	}
 
+	validate() {
+		const errors = super.validate();
+		if (!this.code || this.code.trim().length === 0) {
+			errors.push("Code cannot be empty");
+		}
+		if (this.timeout < 100) {
+			errors.push("Timeout must be at least 100ms");
+		}
+		if (this.timeout > 60000) {
+			errors.push("Timeout cannot exceed 60 seconds");
+		}
+		return errors;
+	}
+
 	getSummary() {
-		return `JS Code (${this.mode})`;
+		const preview = this.code ? this.code.slice(0, 40).replace(/\n/g, " ") : "empty";
+		return `${this.mode.toUpperCase()}: ${preview}${this.code.length > 40 ? "..." : ""}`.slice(0, 120);
 	}
 }

@@ -4,6 +4,7 @@ export const Store = {
 	Executions: "executions",
 	UsageHistory: "UsageHistory",
 	Templates: "templates",
+	FileHandles: "FileHandles",
 	// Cache: "cache",
 	// Settings: "settings",
 };
@@ -32,6 +33,11 @@ class PipeLogicDatabase {
 		if (!db.objectStoreNames.contains(Store.UsageHistory)) {
 			const historyStore = db.createObjectStore(Store.UsageHistory, { keyPath: "id" });
 			historyStore.createIndex("inputType", "inputType", { unique: false });
+		}
+
+		// File handles store
+		if (!db.objectStoreNames.contains(Store.FileHandles)) {
+			db.createObjectStore(Store.FileHandles);
 		}
 	}
 

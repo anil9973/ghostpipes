@@ -84,8 +84,25 @@ export class ParseConfig extends BaseConfig {
 		};
 	}
 
+	validate() {
+		const errors = super.validate();
+		if (!this.inputField) {
+			errors.push("Input field is required");
+		}
+		if (this.format === ParseFormat.CSV && this.csvDelimiter.length !== 1) {
+			errors.push("CSV delimiter must be a single character");
+		}
+		if (this.format === ParseFormat.HTML && Object.keys(this.htmlSelectors).length === 0) {
+			errors.push("At least one HTML selector is required");
+		}
+		return errors;
+	}
+
 	/** @returns {string} Human-readable summary */
 	getSummary() {
-		return `Parse ${this.format.toUpperCase()} from ${this.inputField}`;
+		const format = this.format.toUpperCase();
+		const field = this.inputField !== "raw_data" ? ` from ${this.inputField}` : "";
+		const path = this.jsonPath ? ` → ${this.jsonPath}` : "";
+		return `Parse ${format}${field}${path}`.slice(0, 120);
 	}
 }

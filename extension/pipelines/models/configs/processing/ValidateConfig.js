@@ -86,8 +86,30 @@ export class ValidateConfig extends BaseConfig {
 		};
 	}
 
+	validate() {
+		const errors = super.validate();
+		if (this.rules.length === 0) {
+			errors.push("At least one validation rule is required");
+		}
+		this.rules.forEach((rule, i) => {
+			if (!rule.field) errors.push(`Rule ${i + 1}: field is required`);
+			if (rule.pattern) {
+				try {
+					new RegExp(rule.pattern);
+				} catch (e) {
+					errors.push(`Rule ${i + 1}: invalid pattern - ${e.message}`);
+				}
+			}
+		});
+		return errors;
+	}
+
 	getSummary() {
 		const count = this.rules.filter((r) => r.field).length;
-		return `${count} validation${count !== 1 ? "s" : ""} (${this.onFailure} invalid)`;
+		if (count === 0) return "No validation rules";
+		const first = this.rules.find((r) => r.field);
+		const req = first?.required ? " (required)" : "";
+		const more = count > 1 ? ` +${count - 1}` : "";
+		return `Validate ${first?.field}${req}${more} → ${this.onFailure}`.slice(0, 120);
 	}
 }

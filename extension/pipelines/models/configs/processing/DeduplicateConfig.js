@@ -75,8 +75,11 @@ export class DeduplicateConfig extends BaseConfig {
 	}
 
 	getSummary() {
-		return this.scope === DeduplicateScope.FIELD && this.fields.length > 0
-			? `Unique by [${this.fields.join(", ")}]`
-			: `Unique by ${this.scope}`;
+		if (this.scope === DeduplicateScope.FIELD && this.fields.length > 0) {
+			const fields = this.fields.slice(0, 3).join(", ");
+			const more = this.fields.length > 3 ? ` +${this.fields.length - 3}` : "";
+			return `Remove duplicates by ${fields}${more} (keep ${this.keep})`.slice(0, 120);
+		}
+		return `Remove duplicates (full match, keep ${this.keep})`;
 	}
 }

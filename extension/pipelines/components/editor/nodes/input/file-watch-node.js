@@ -1,9 +1,10 @@
-import { html, react, map } from "../../../../../lib/om.compact.js";
-import { PipeNode } from "../../../../models/PipeNode.js";
-import { MultiChipSelectField } from "../multi-chip-select-field.js";
-import { NodeConfigHeader } from "../config-node-header.js";
 import { FileWatchConfig } from "../../../../models/configs/input/FileWatchConfig.js";
+import { MultiChipSelectField } from "../multi-chip-select-field.js";
+import { html, react } from "../../../../../lib/om.compact.js";
+import { PipeNode } from "../../../../models/PipeNode.js";
+import { NodeConfigHeader } from "../config-node-header.js";
 import { pipedb } from "../../../../db/pipeline-db.js";
+import { ConfigErrorBox } from "../config-error-box.js";
 
 export class FileWatchNodePopup extends HTMLElement {
 	/** @param {PipeNode} pipeNode */
@@ -11,13 +12,15 @@ export class FileWatchNodePopup extends HTMLElement {
 		super();
 		this.popover = "";
 		this.className = "node-config-popup";
-		this.pipeNode = react(pipeNode);
+		this.pipeNode = pipeNode;
 		/** @type {FileWatchConfig}  */
 		this.config = pipeNode.config;
+		this.errors = react([]);
 	}
 
 	async handleBrowse() {
 		try {
+			// @ts-ignore
 			const dirHandle = await window.showDirectoryPicker();
 			this.config.directoryHandle = dirHandle;
 			this.config.directoryName = dirHandle.name;
@@ -27,13 +30,21 @@ export class FileWatchNodePopup extends HTMLElement {
 	}
 
 	async handleSave() {
+		this.errors.splice(0, this.errors.length, ...this.config.validate());
+		if (this.errors.length !== 0) return;
+		this.pipeNode.summary = this.config.getSummary();
 		const config = Object.assign({}, this.config);
-		await pipedb.updateNodeConfig(config, this.pipeNode.id);
-		fireEvent(this, "save-node-config", this.pipeNode);
+		console.log(this.pipeNode);
+		config.watchMimeTypes = Object.assign([], this.config.watchMimeTypes);
+
+		await pipedb.updateNodeConfig(this.pipeNode.id, config, this.pipeNode.summary);
+		fireEvent(this, "savenodeconfig", this.pipeNode);
 		this.hidePopover();
 	}
 
-	onClosedPopover() {}
+	onClosedPopover() {
+		// TODO validate
+	}
 
 	render() {
 		const commonMimes = ["text/csv", "text/plain", "application/json", "application/xml"];
@@ -58,7 +69,7 @@ export class FileWatchNodePopup extends HTMLElement {
 	connectedCallback() {
 		const header = new NodeConfigHeader({ icon: "file-watch", title: "File Watch" });
 		header.addEventListener("update", this.handleSave.bind(this));
-		this.replaceChildren(header, this.render());
+		this.replaceChildren(header, this.render(), new ConfigErrorBox(this.errors));
 		this.showPopover();
 		$on(this, "toggle", (evt) => evt.newState === "closed" && this.onClosedPopover());
 	}

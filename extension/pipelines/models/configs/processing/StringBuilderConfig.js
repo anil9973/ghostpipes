@@ -41,7 +41,25 @@ export class StringBuilderConfig extends BaseConfig {
 		};
 	}
 
+	validate() {
+		const errors = super.validate();
+		if (this.parts.length === 0) {
+			errors.push("At least one string part is required");
+		}
+		this.parts.forEach((part, i) => {
+			if (!part.type) errors.push(`Part ${i + 1}: type is required`);
+			if (!part.value) errors.push(`Part ${i + 1}: value is required`);
+		});
+		return errors;
+	}
+
 	getSummary() {
-		return `Build string (${this.parts.length} parts)`;
+		if (this.parts.length === 0) return "Empty string";
+		const preview = this.parts
+			.slice(0, 3)
+			.map((p) => (p.type === "text" ? `"${p.value.slice(0, 15)}"` : `{${p.value}}`))
+			.join(" + ");
+		const more = this.parts.length > 3 ? "..." : "";
+		return `${preview}${more}`.slice(0, 120);
 	}
 }

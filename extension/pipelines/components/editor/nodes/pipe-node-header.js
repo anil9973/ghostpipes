@@ -29,11 +29,14 @@ import { ManualUploadNodePopup } from "./input/manual-upload-node.js";
 import { FileAppendNodePopup } from "./output/file-append-node.js";
 import { HttpPostRequestNodePopup } from "./output/http-post-request-node.js";
 import { SendEmailNodePopup } from "./output/send-email-node.js";
+import { DownloadNodePopup } from "./output/download-node.js";
+import { ScheduledHttpNodePopup } from "./input/scheduled-http-node.js";
 
 // Factory map using arrow functions
-const NODE_COMPONENT_MAP = {
+const NODE_COMPONENT_MAP = Object.freeze({
 	manual_input: (node) => new ManualUploadNodePopup(node),
 	http_request: (node) => new HttpFetchNodePopup(node),
+	scheduled_http: (node) => new ScheduledHttpNodePopup(node),
 	file_watch: (node) => new FileWatchNodePopup(node),
 
 	filter: (node) => new FilterDataNodePopup(node),
@@ -62,10 +65,11 @@ const NODE_COMPONENT_MAP = {
 	intersect: (node) => new IntersectDataNodePopup(node),
 	distinct: (node) => new DistinctDataNodePopup(node),
 
+	download: (node) => new DownloadNodePopup(node),
 	file_append: (node) => new FileAppendNodePopup(node),
 	http_post: (node) => new HttpPostRequestNodePopup(node),
-	send_email: (node) => new SendEmailNodePopup(node),
-};
+	email_send: (node) => new SendEmailNodePopup(node),
+});
 
 export class PipeNodeHeader extends HTMLElement {
 	/** @param {PipeNode} pipeNode  */
@@ -76,20 +80,21 @@ export class PipeNodeHeader extends HTMLElement {
 
 	handleEdit(evt) {
 		evt.stopPropagation();
+		console.log(this.pipeNode.type);
 		const configPopupElem = NODE_COMPONENT_MAP[this.pipeNode.type]?.(this.pipeNode);
-		if (!configPopupElem) return alert(`No config component found for type: ${this.pipeNode.type}`);
+		if (!configPopupElem) return notify(`No config component found for type: ${this.pipeNode.type}`, "error");
 
-		configPopupElem.addEventListener("save-node-config", (event) => {
+		configPopupElem.addEventListener("savenodeconfig", (event) => {
 			const summaryEl = this.querySelector("blockquote");
 			if (summaryEl) summaryEl.textContent = this.pipeNode.summary;
-			fireEvent(this, "node-updated", { nodeId: this.pipeNode.id });
+			fireEvent(this, "update");
 			configPopupElem.remove();
 		});
 
-		configPopupElem.addEventListener("delete-node", () => {
+		/* configPopupElem.addEventListener("delete-node", () => {
 			this.handleDelete();
 			configPopupElem.remove();
-		});
+		}); */
 
 		const rect = this.parentElement.getBoundingClientRect();
 		configPopupElem.style.left = rect.left - 100 + "px";
@@ -99,10 +104,7 @@ export class PipeNodeHeader extends HTMLElement {
 
 	handleDelete(evt) {
 		evt.stopPropagation();
-		if (confirm(`Delete node "${this.pipeNode.title}"?`)) {
-			fireEvent(this, "delete-node", { nodeId: this.pipeNode.id });
-			this.remove();
-		}
+		if (confirm(`Delete node "${this.pipeNode.title}"?`)) fireEvent(this, "delete");
 	}
 
 	render() {
@@ -112,7 +114,7 @@ export class PipeNodeHeader extends HTMLElement {
 				<button class="icon-btn edit-btn" @click=${this.handleEdit.bind(this)} title="Edit">
 					<svg class="icon"><use href="/assets/icons.svg#edit"></use></svg>
 				</button>
-				<button class="icon-btn delete-btn" @click=${this.handleEdit.bind(this)} title="Delete">
+				<button class="icon-btn delete-btn" @click=${this.handleDelete.bind(this)} title="Delete">
 					<svg class="icon"><use href="/assets/icons.svg#delete"></use></svg>
 				</button>
 			</div> `;

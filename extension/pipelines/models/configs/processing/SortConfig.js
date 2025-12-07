@@ -50,9 +50,22 @@ export class SortConfig extends BaseConfig {
 		};
 	}
 
+	validate() {
+		const errors = super.validate();
+		if (this.criteria.length === 0) {
+			errors.push("At least one sort criterion is required");
+		}
+		this.criteria.forEach((criterion, i) => {
+			if (!criterion.field) errors.push(`Criterion ${i + 1}: field is required`);
+		});
+		return errors;
+	}
+
 	getSummary() {
 		if (this.criteria.length === 0) return "No sort criteria";
 		const first = this.criteria[0];
-		return `Sort by ${first.field} (${first.order})`;
+		const arrow = first.order === SortOrder.ASC ? "↑" : "↓";
+		const more = this.criteria.length > 1 ? ` +${this.criteria.length - 1}` : "";
+		return `Sort by ${first.field} ${arrow}${more}`.slice(0, 120);
 	}
 }

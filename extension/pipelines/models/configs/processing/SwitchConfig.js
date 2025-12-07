@@ -46,7 +46,21 @@ export class SwitchConfig extends BaseConfig {
 		};
 	}
 
+	validate() {
+		const errors = super.validate();
+		if (!this.switchField) {
+			errors.push("Switch field is required");
+		}
+		if (Object.keys(this.cases).length === 0 && !this.defaultCase) {
+			errors.push("At least one case or a default case is required");
+		}
+		return errors;
+	}
+
 	getSummary() {
-		return this.switchField ? `Switch on ${this.switchField}` : "No switch field";
+		if (!this.switchField) return "Switch not configured";
+		const caseCount = Object.keys(this.cases).length;
+		const hasDefault = this.defaultCase ? " +default" : "";
+		return `Switch ${this.switchField} (${caseCount} case${caseCount !== 1 ? "s" : ""}${hasDefault})`.slice(0, 120);
 	}
 }

@@ -52,7 +52,18 @@ export class UnionConfig extends BaseConfig {
 		};
 	}
 
+	validate() {
+		const errors = super.validate();
+		if (this.strategy === UnionStrategy.UNIQUE && !this.deduplicateField) {
+			errors.push("Deduplicate field is required for unique strategy");
+		}
+		return errors;
+	}
+
 	getSummary() {
-		return `Union (${this.strategy})`;
+		const strat = this.strategy.toUpperCase();
+		const field =
+			this.strategy === UnionStrategy.UNIQUE && this.deduplicateField ? ` by ${this.deduplicateField}` : "";
+		return `Union (${strat}${field})`.slice(0, 120);
 	}
 }

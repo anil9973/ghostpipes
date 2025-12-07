@@ -91,7 +91,27 @@ export class FormatConfig extends BaseConfig {
 		};
 	}
 
+	validate() {
+		const errors = super.validate();
+		if (this.format === FormatOutput.CUSTOM && !this.template) {
+			errors.push("Template is required for custom format");
+		}
+		if (this.format === FormatOutput.CSV) {
+			if (this.csvDelimiter.length !== 1) errors.push("CSV delimiter must be a single character");
+
+			if (this.csvQuote.length !== 1) errors.push("CSV quote must be a single character");
+		}
+		return errors;
+	}
+
 	getSummary() {
-		return `Format as ${this.format.toUpperCase()}`;
+		const formatName = Object.keys(FormatOutput).find((k) => FormatOutput[k] === this.format) || "CUSTOM";
+		const opts =
+			this.format === FormatOutput.CSV && !this.csvIncludeHeaders
+				? " (no headers)"
+				: this.format === FormatOutput.JSON && this.jsonPretty
+				? " (pretty)"
+				: "";
+		return `Format as ${formatName}${opts}`.slice(0, 120);
 	}
 }

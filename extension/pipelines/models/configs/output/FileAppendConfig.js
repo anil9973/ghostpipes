@@ -14,6 +14,7 @@ export class FileAppendConfig extends BaseConfig {
 	/**
 	 * @param {Object} init - Initial configuration
 	 * @param {string} [init.path] - File path to append to
+	 * @param {string} [init.fileHandleId] - File path to append to
 	 * @param {string} [init.format] - Output format (json, csv, xml, text, custom)
 	 * @param {boolean} [init.createIfMissing] - Create file if it doesn't exist
 	 * @param {boolean} [init.addHeader] - Add header row for CSV files
@@ -23,6 +24,9 @@ export class FileAppendConfig extends BaseConfig {
 		super();
 		/** @type {string} Target file path or storage key */
 		this.path = init.path || "";
+
+		/** @type {string} Target file path or storage key */
+		this.fileHandleId = init.fileHandleId;
 
 		/** @type {FormatOutput} Output serialization format */
 		this.format = init.format || FormatOutput.CSV;
@@ -64,7 +68,18 @@ export class FileAppendConfig extends BaseConfig {
 		};
 	}
 
+	validate() {
+		const errors = super.validate();
+		if (!this.path || this.path.trim().length === 0) {
+			errors.push("File path is required");
+		}
+		return errors;
+	}
+
 	getSummary() {
-		return this.path ? `Append to ${this.path}` : "No file path";
+		if (!this.path) return "No file path configured";
+		const formatName = Object.keys(FormatOutput).find((k) => FormatOutput[k] === this.format) || "UNKNOWN";
+		const create = this.createIfMissing ? " (create)" : "";
+		return `Append ${formatName} to ${this.path}${create}`.slice(0, 120);
 	}
 }

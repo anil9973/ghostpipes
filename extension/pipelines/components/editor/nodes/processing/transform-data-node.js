@@ -3,6 +3,7 @@ import { html, react, map } from "../../../../../lib/om.compact.js";
 import { PipeNode } from "../../../../models/PipeNode.js";
 import { NodeConfigHeader } from "../config-node-header.js";
 import { pipedb } from "../../../../db/pipeline-db.js";
+import { ConfigErrorBox } from "../config-error-box.js";
 
 export class TransformDataNodePopup extends HTMLElement {
 	/** @param {PipeNode} pipeNode */
@@ -10,9 +11,10 @@ export class TransformDataNodePopup extends HTMLElement {
 		super();
 		this.popover = "";
 		this.className = "node-config-popup";
-		this.pipeNode = react(pipeNode);
+		this.pipeNode = pipeNode;
 		/** @type {TransformConfig}  */
 		this.config = pipeNode.config;
+		this.errors = react([]);
 		this.ensureEmptyRow();
 	}
 
@@ -20,9 +22,8 @@ export class TransformDataNodePopup extends HTMLElement {
 		const list = this.config.transformations;
 		const last = list[list.length - 1];
 
-		if (!last || last.sourceField !== "" || last.targetField !== "") {
+		if (!last || last.sourceField !== "" || last.targetField !== "")
 			list.push({ sourceField: "", targetField: "", operation: TransformOperation.COPY, options: {} });
-		}
 	}
 
 	handleRowInput(index) {
@@ -35,17 +36,30 @@ export class TransformDataNodePopup extends HTMLElement {
 	}
 
 	async handleSave() {
-		const config = Object.assign({}, this.config);
-		await pipedb.updateNodeConfig(config, this.pipeNode.id);
-		const validTransformations = this.config.transformations.filter((t) => t.sourceField.trim() !== "");
-		this.config.transformations = validTransformations;
+		try {
+			this.config.transformations = this.config.transformations.filter((t) => t.sourceField.trim() !== "");
+			this.errors.splice(0, this.errors.length, ...this.config.validate());
+			if (this.errors.length !== 0) return;
+			this.pipeNode.summary = this.config.getSummary();
 
-		fireEvent(this, "save-node-config", this.pipeNode);
-		this.hidePopover();
-		this.ensureEmptyRow();
+			const config = Object.assign({}, this.config);
+			//prettier-ignore
+			config.transformations = Object.assign([], this.config.transformations.map((t) => { t.options =  Object.assign({}, t.options); return Object.assign({}, t) }));
+			console.log(config);
+			await pipedb.updateNodeConfig(this.pipeNode.id, config, this.pipeNode.summary);
+
+			fireEvent(this, "savenodeconfig", this.pipeNode);
+			this.hidePopover();
+			this.ensureEmptyRow();
+		} catch (error) {
+			console.error(error);
+			notify(error.message, "error");
+		}
 	}
 
-	onClosedPopover() {}
+	onClosedPopover() {
+		// TODO validate
+	}
 
 	render() {
 		return html`<section>
@@ -61,14 +75,9 @@ export class TransformDataNodePopup extends HTMLElement {
 					</thead>
 					<tbody>
 						${map(
-							() => this.config.transformations,
+							this.config.transformations,
 							(item, index) =>
-								new TransformRuleRow(
-									item,
-									this.pipeNode.properties,
-									() => this.handleRemoveRow(index),
-									index === this.config.transformations.length - 1
-								)
+								new TransformRuleRow(item, this.pipeNode.properties, this.handleRemoveRow.bind(this, index))
 						)}
 					</tbody>
 				</table>
@@ -83,7 +92,7 @@ export class TransformDataNodePopup extends HTMLElement {
 	connectedCallback() {
 		const header = new NodeConfigHeader({ icon: "transform", title: "Transform" });
 		header.addEventListener("update", this.handleSave.bind(this));
-		this.replaceChildren(header, this.render());
+		this.replaceChildren(header, this.render(), new ConfigErrorBox(this.errors));
 		this.showPopover();
 		$on(this, "toggle", (evt) => evt.newState === "closed" && this.onClosedPopover());
 	}
@@ -92,12 +101,11 @@ export class TransformDataNodePopup extends HTMLElement {
 customElements.define("transform-data-node-card", TransformDataNodePopup);
 
 export class TransformRuleRow extends HTMLTableRowElement {
-	constructor(transform, properties, onDelete, isLast) {
+	constructor(transform, properties, onDelete) {
 		super();
 		this.transform = transform;
 		this.properties = properties;
 		this.onDelete = onDelete;
-		this.isLast = isLast;
 	}
 
 	render() {
@@ -135,7 +143,7 @@ export class TransformRuleRow extends HTMLTableRowElement {
 		const deleteBtn = html`<button
 			class="icon-btn delete-btn"
 			@click=${this.onDelete}
-			style="${() => (this.isLast && !this.transform.sourceField ? "visibility:hidden" : "")}">
+			style="visibility:${() => (this.transform.sourceField ? "visible" : "hidden")}">
 			<svg class="icon"><use href="/assets/icons.svg#delete"></use></svg>
 		</button>`;
 		this.insertCell().appendChild(deleteBtn);

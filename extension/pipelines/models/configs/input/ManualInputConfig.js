@@ -50,8 +50,22 @@ export class ManualInputConfig extends BaseConfig {
 		};
 	}
 
+	validate() {
+		const errors = super.validate();
+		if (this.allowedMimeTypes.length === 0) {
+			errors.push("At least one MIME type must be allowed");
+		}
+		return errors;
+	}
+
 	/** @returns {string} Human-readable summary */
 	getSummary() {
-		return `Manual input (${this.allowedMimeTypes.length} types)`;
+		const types = this.allowedMimeTypes.length;
+		const typeNames = this.allowedMimeTypes.slice(0, 2).map((t) => {
+			const name = Object.keys(AllowedMimeTypes).find((k) => AllowedMimeTypes[k] === t);
+			return name ? name.split("_")[1] : t.split("/")[1];
+		});
+		const more = types > 2 ? ` +${types - 2}` : "";
+		return `Manual input: ${typeNames.join(", ")}${more}`.slice(0, 120);
 	}
 }

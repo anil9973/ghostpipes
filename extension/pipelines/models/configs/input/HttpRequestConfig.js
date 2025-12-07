@@ -151,12 +151,18 @@ export class HttpRequestConfig extends BaseConfig {
 		};
 	}
 
-	/**
-	 * Get a human-readable summary of the configuration
-	 *
-	 * @returns {string} Summary text
-	 */
+	validate() {
+		const errors = super.validate();
+		this.url ? URL.canParse(this.url) || errors.push("URL must be valid") : errors.push("URL is required");
+		if (this.timeout < 1000) errors.push("Timeout must be at least 1000ms");
+		return errors;
+	}
+
+	/** @returns {string} Summary text Get a human-readable summary of the configuration */
 	getSummary() {
-		return this.url ? `${this.method} ${this.url}` : "No URL configured";
+		if (!this.url) return "No URL configured";
+		const url = this.url.length > 50 ? this.url.slice(0, 47) + "..." : this.url;
+		const params = this.queryParams.length > 0 ? ` +${this.queryParams.length}p` : "";
+		return `${this.method} ${url}${params}`.slice(0, 120);
 	}
 }

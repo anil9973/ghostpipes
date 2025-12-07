@@ -4,11 +4,14 @@
  */
 
 import { TriggerManager } from "./execution/TriggerManager.js";
-import { openPipeStation, toggleSelectionActionScript } from "./select-action.js";
+import { onUpdateTab, openPipeStation, toggleSelectionActionScript } from "./select-action.js";
 import { subscribeForPushMessage } from "./webhook/push-api-subscribe.js";
 import { handlePushMessage } from "./webhook/webhook-trigger.js";
 
 // import "../tests/execution/execute.js"; // For testing in service_environment
+
+globalThis.getStore = chrome.storage.local.get.bind(chrome.storage.local);
+globalThis.setStore = chrome.storage.local.set.bind(chrome.storage.local);
 
 var triggerManager;
 
@@ -37,6 +40,10 @@ chrome.alarms.onAlarm.addListener((alarm) => {
 });
 
 chrome.action.onClicked.addListener(toggleSelectionActionScript);
+
+getStore("autoRunTabUrlPatterns", ({ autoRunTabUrlPatterns }) => {
+	Object.keys(autoRunTabUrlPatterns).length === 0 || chrome.tabs.onUpdated.addListener(onUpdateTab);
+});
 
 //context menus
 export const contextHandler = {
@@ -84,14 +91,14 @@ export async function setInstallation({ reason }) {
 	});
 
 	// Temporary: Testing only
-	chrome.scripting.registerContentScripts([
-		{
-			id: "textSelector",
-			allFrames: true,
-			js: ["scripts/content.js"],
-			matches: ["https://*/*"],
-		},
-	]);
+	// chrome.scripting.registerContentScripts([
+	// 	{
+	// 		id: "textSelector",
+	// 		allFrames: true,
+	// 		js: ["scripts/content.js"],
+	// 		matches: ["https://*/*"],
+	// 	},
+	// ]);
 }
 
 // installation setup

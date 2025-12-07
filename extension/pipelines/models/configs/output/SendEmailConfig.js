@@ -54,8 +54,28 @@ export class SendEmailConfig extends BaseConfig {
 		};
 	}
 
+	validate() {
+		const errors = super.validate();
+		if (this.recipients.length === 0) {
+			errors.push("At least one recipient is required");
+		}
+		const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+		this.recipients.forEach((email, i) => {
+			if (!emailRegex.test(email)) {
+				errors.push(`Recipient ${i + 1}: invalid email address`);
+			}
+		});
+		if (!this.subject && !this.body && !this.bodyTemplate) {
+			errors.push("Subject, body, or body template is required");
+		}
+		return errors;
+	}
+
 	getSummary() {
 		const count = this.recipients.length;
-		return count === 1 ? `Email to ${this.recipients[0]}` : `Email to ${count} recipients`;
+		if (count === 0) return "No recipients";
+		const to = count === 1 ? this.recipients[0] : `${count} recipients`;
+		const subj = this.subject !== "Pipeline Results" ? `: ${this.subject.slice(0, 30)}` : "";
+		return `Email to ${to}${subj}`.slice(0, 120);
 	}
 }

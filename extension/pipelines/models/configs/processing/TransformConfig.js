@@ -73,6 +73,9 @@ export class TransformConfig extends BaseConfig {
 	/** @returns {string[]} Validation errors */
 	validate() {
 		const errors = super.validate();
+		if (this.transformations.length === 0) {
+			errors.push("At least one transformation is required");
+		}
 		this.transformations.forEach((t, i) => {
 			if (!t.targetField) errors.push(`Transformation ${i}: targetField is required`);
 			if (!t.sourceField) errors.push(`Transformation ${i}: sourceField is required`);
@@ -83,7 +86,10 @@ export class TransformConfig extends BaseConfig {
 	/** @returns {string} Human-readable summary */
 	getSummary() {
 		const count = this.transformations.filter((t) => t.targetField && t.sourceField).length;
-		if (count === 0) return "No transformations defined";
-		return `${count} transformation${count !== 1 ? "s" : ""}`;
+		if (count === 0) return "No transformations";
+		const first = this.transformations.find((t) => t.targetField && t.sourceField);
+		const op = first ? `${first.sourceField} → ${first.targetField}` : "";
+		const more = count > 1 ? ` +${count - 1}` : "";
+		return `${op}${more}`.slice(0, 120);
 	}
 }
