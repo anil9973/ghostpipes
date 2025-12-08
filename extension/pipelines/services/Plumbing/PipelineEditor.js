@@ -36,15 +36,57 @@ export class PipelineEditor {
 		return node;
 	}
 
+	checkAutoGrow(node) {
+		const buffer = 100; // Trigger when within 100px of edge
+		const growAmount = 300; // Add 300px
+
+		// 1. Parse current position (integers)
+		const x = parseInt(node.style.left || 0);
+		const y = parseInt(node.style.top || 0);
+		const w = node.offsetWidth;
+		const h = node.offsetHeight;
+
+		// 2. Get current canvas size (scroll dimensions)
+		// We check scrollWidth/Height because that represents the true size including overflow
+		const currentWidth = this.pipeCanvas.scrollWidth;
+		const currentHeight = this.pipeCanvas.scrollHeight;
+
+		let didGrow = false;
+
+		// Check Height
+		if (y + h + buffer > currentHeight) {
+			this.pipeCanvas.style.height = `${currentHeight + growAmount}px`;
+			didGrow = true;
+		}
+
+		// Check Width
+		if (x + w + buffer > currentWidth) {
+			this.pipeCanvas.style.width = `${currentWidth + growAmount}px`;
+			didGrow = true;
+		}
+
+		// If we grew the container, we MUST update the SVG size to match
+		// otherwise pipes at the bottom get clipped.
+		if (didGrow) {
+			this.svgLayer.style.height = this.pipeCanvas.style.height;
+			this.svgLayer.style.width = this.pipeCanvas.style.width;
+		}
+	}
+
 	#setupEvents() {
 		// Listen for internal node events
-		this.pipeCanvas.addEventListener("nodedrag", this.renderPipes.bind(this));
+		this.pipeCanvas.addEventListener("nodedrag", this.onNodeDrag.bind(this));
 		this.pipeCanvas.addEventListener("noderesize", this.renderPipes.bind(this));
 		this.pipeCanvas.addEventListener("nodedelete", (e) => this.deleteNode(e["detail"]));
 		this.pipeCanvas.addEventListener("port-drag-start", (e) => this.startPipeDrag(e["detail"]));
 
 		addEventListener("pointermove", this.onPointerMove.bind(this));
 		addEventListener("pointerup", this.onPointerUp.bind(this));
+	}
+
+	onNodeDrag(evt) {
+		this.renderPipes();
+		evt.target.nodeName === CtmElemNames.PIPELINE_NODE_BOX && this.checkAutoGrow(evt.target);
 	}
 
 	async handleNodeDrop(evt) {

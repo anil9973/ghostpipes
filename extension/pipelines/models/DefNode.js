@@ -39,6 +39,7 @@ export const NodeTypeTitles = Object.freeze({
 	[NodeType.DRIVE_UPLOAD]: "Upload to Drive",
 	[NodeType.EMAIL_SEND]: "Send Email",
 	[NodeType.DATABASE_WRITE]: "Database Write",
+	[NodeType.SPREADSHEET_WRITE]: "Export to Sheet",
 });
 
 /**@enum {string} */
@@ -46,16 +47,13 @@ export const NodeTypeSubtitles = Object.freeze({
 	// Manual input
 	[NodeType.MANUAL_INPUT]: "Paste text / Upload file",
 	[NodeType.EXTENSION_DATA]: "Selected data from extension",
-
 	// HTTP & triggers
 	[NodeType.SCHEDULED_HTTP]: "Fetch data on a recurring schedule",
 	[NodeType.HTTP_REQUEST]: "One-time fetch",
 	[NodeType.TAB_VISIT]: "Auto trigger on tab visit",
-
 	// Standalone event receivers
 	[NodeType.FILE_WATCH]: "Monitor folder for new files",
 	[NodeType.WEBHOOK]: "Receive POST data (Auto-generated URL)",
-
 	// Common Data Ops
 	[NodeType.FILTER]: "Remove unwanted data",
 	[NodeType.TRANSFORM]: "Change format/structure",
@@ -68,7 +66,6 @@ export const NodeTypeSubtitles = Object.freeze({
 	[NodeType.LOOKUP]: "Lookup/Enrich",
 	[NodeType.PARSE]: "Extract from JSON/HTML/CSV",
 	[NodeType.FORMAT]: "Output formatting",
-
 	// Advanced Data Ops / Set Ops / Control Flow
 	[NodeType.UNION]: "Union operation",
 	[NodeType.INTERSECT]: "Intersect operation",
@@ -76,7 +73,6 @@ export const NodeTypeSubtitles = Object.freeze({
 	[NodeType.STRING_BUILDER]: "String operations (substring, concat, regex)",
 	[NodeType.LOOP]: "Loop/Iterate",
 	[NodeType.UNTIL_LOOP]: "Until loop",
-
 	// File operations
 	[NodeType.FILE_APPEND]: "Append to File",
 	// Custom logic
@@ -89,6 +85,7 @@ export const NodeTypeSubtitles = Object.freeze({
 	[NodeType.DRIVE_UPLOAD]: "Upload to online drive (GDrive, Dropbox, etc.)",
 	[NodeType.EMAIL_SEND]: "Send email",
 	[NodeType.DATABASE_WRITE]: "Write to database (coming soon)",
+	[NodeType.SPREADSHEET_WRITE]: "Send data to spreadsheets",
 	[NodeType.HTTP_POST]: "Custom HTTP POST request",
 });
 
@@ -99,12 +96,9 @@ export const ManualInputNodes = Object.freeze([NodeType.MANUAL_INPUT, NodeType.E
 export const HttpNodes = Object.freeze([NodeType.HTTP_REQUEST, NodeType.HTTP_POST]);
 
 /** Autonomous nodes (no upstream input needed) */
-export const AutoTriggerNodes = Object.freeze([
-	NodeType.SCHEDULED_HTTP,
-	NodeType.TAB_VISIT,
-	NodeType.FILE_WATCH,
-	NodeType.WEBHOOK,
-]);
+export const AutoTriggerNodes = Object.freeze([NodeType.SCHEDULED_HTTP, NodeType.TAB_VISIT, NodeType.FILE_WATCH]);
+
+// export const AuthRequiredNodes = new Set([NodeType.DRIVE_UPLOAD, NodeType.SPREADSHEET_WRITE, NodeType.WEBHOOK]);
 
 /** Most common ETL data operations */
 export const CommonDataOps = Object.freeze([
@@ -139,18 +133,20 @@ export const OutputNodes = Object.freeze([
 	NodeType.DOWNLOAD,
 	NodeType.COPY,
 	NodeType.FILE_APPEND,
-	NodeType.DRIVE_UPLOAD,
 	NodeType.EMAIL_SEND,
-	NodeType.DATABASE_WRITE,
 	NodeType.HTTP_POST,
+	// NodeType.DATABASE_WRITE,
 ]);
+
+export const OutputAuthNodes = Object.freeze([NodeType.DRIVE_UPLOAD, NodeType.SPREADSHEET_WRITE]);
 
 export class DefNode {
 	/** @param {NodeType} type*/
-	constructor(type) {
+	constructor(type, authRequired = false) {
 		this.type = type;
 		this.iconId = type.replace(/_/, "-"); // auto-convert for icons;
 		this.title = NodeTypeTitles[type];
 		this.subtitle = NodeTypeSubtitles[type];
+		this.authRequired = authRequired;
 	}
 }

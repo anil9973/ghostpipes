@@ -1,4 +1,5 @@
 import { react } from "../../../../lib/om.compact.js";
+import { pipedb } from "../../../db/pipeline-db.js";
 import { CtmElemNames } from "../../../js/constant.js";
 import { PipeNode } from "../../../models/PipeNode.js";
 import { PipeNodeHeader } from "./pipe-node-header.js";
@@ -18,11 +19,11 @@ export class PipelineNodeBox extends HTMLElement {
 		this.pipeNode = react(pipeNode);
 	}
 
-	/* initResizeObserver() {
+	initResizeObserver() {
 		// Detects when the node changes size
-		this.resizeObserver = new ResizeObserver(() => fireEvent(this.parentElement, "nodenoderesizedrag"));
+		this.resizeObserver = new ResizeObserver(() => fireEvent(this.parentElement, "noderesizedrag"));
 		this.resizeObserver.observe(this);
-	} */
+	}
 
 	onPointerDown(evt) {
 		if (evt.target.closest("svg")) return;
@@ -39,10 +40,12 @@ export class PipelineNodeBox extends HTMLElement {
 	onPointerMove(evt) {
 		if (this.isDragging) {
 			const parentRect = this.parentElement.getBoundingClientRect();
-			this.style.left = `${evt.clientX - parentRect.left - this.dragOffset.x}px`;
-			this.style.top = `${evt.clientY - parentRect.top - this.dragOffset.y}px`;
+			const x = evt.clientX - parentRect.left - this.dragOffset.x + this.parentElement.scrollLeft;
+			const y = evt.clientY - parentRect.top - this.dragOffset.y + this.parentElement.scrollTop;
+			this.style.left = `${x}px`;
+			this.style.top = `${y}px`;
 			// Notify parent to redraw pipes
-			fireEvent(this.parentElement, "nodedrag");
+			this.dispatchEvent(new Event("nodedrag", { bubbles: true }));
 		} else this.#handleHover(evt);
 	}
 
@@ -50,6 +53,9 @@ export class PipelineNodeBox extends HTMLElement {
 		this.isDragging = false;
 		this.style.zIndex = "";
 		this.releasePointerCapture(evt.pointerId);
+
+		const props = { position: { x: parseInt(this.style.left), y: parseInt(this.style.top) } };
+		pipedb.updatePipeNode(this.pipeNode.id, props).catch((err) => notify(err, "error"));
 	}
 
 	onPlusBtnPointerDown(evt) {
@@ -164,7 +170,7 @@ export class PipelineNodeBox extends HTMLElement {
 	connectedCallback() {
 		this.replaceChildren(...this.render());
 		this.attachListeners();
-		// this.initResizeObserver();
+		this.initResizeObserver();
 	}
 }
 

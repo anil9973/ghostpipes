@@ -22,7 +22,8 @@ export class DefNodeCard extends HTMLElement {
 			<div class="column">
 				<div class="title">${this.node.title}</div>
 				<div class="subtitle">${this.node.subtitle}</div>
-			</div>`;
+			</div>
+			${this.node.authRequired ? html`<span class="auth-lock" title="User Account Required">🔒</span>` : ""}`;
 	}
 
 	connectedCallback() {

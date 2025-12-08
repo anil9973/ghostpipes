@@ -1,7 +1,7 @@
 import { db, Store } from "./db.js";
 
 /**@returns {Promise<FileSystemDirectoryHandle|FileSystemFileHandle>} */
-export function getSyncDirectory(fileHandleId) {
+export function getFileHandleById(fileHandleId) {
 	return new Promise(async (resolve, reject) =>
 		db.getObjStore(Store.FileHandles).then((store) => {
 			const request = store.get(fileHandleId);

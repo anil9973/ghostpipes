@@ -71,6 +71,7 @@ export const NodeType = Object.freeze({
 	DRIVE_UPLOAD: "drive_upload",
 	EMAIL_SEND: "email_send",
 	DATABASE_WRITE: "database_write",
+	SPREADSHEET_WRITE: "spreedsheet_write",
 	// Additional category from def nodes
 	EXTENSION_DATA: "extension_data",
 });

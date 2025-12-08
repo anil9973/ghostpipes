@@ -1,14 +1,10 @@
-import "./node-card.js";
-import "./input-resources.js";
-import "./data-operations.js";
-import "./output-destinations.js";
-import { DefNodeCard } from "./node-card.js";
+import { AuthRequiredDialog } from "../../utils/auth-required-dialog.js";
+import { OutputDestinations } from "./output-destinations.js";
 import { InputResources } from "./input-resources.js";
 import { DataOperations } from "./data-operations.js";
-import { OutputDestinations } from "./output-destinations.js";
-import { AiPlumberNodeCard } from "../nodes/ai-plumber-node.js";
-import { DefNode } from "../../../models/DefNode.js";
 import { NodeType } from "../../../models/PipeNode.js";
+import { DefNode } from "../../../models/DefNode.js";
+import { DefNodeCard } from "./node-card.js";
 
 /** NodePickerDrawer component - main container for categorized node selection */
 export class NodePickerDrawer extends HTMLElement {
@@ -16,8 +12,20 @@ export class NodePickerDrawer extends HTMLElement {
 		super();
 	}
 
-	handleNodeSelected({ detail }) {
-		fireEvent(this, "addnode", detail);
+	onNodeDragStart(evt) {
+		const node = evt.target.node;
+		if (!node.authRequired) return;
+
+		evt.preventDefault();
+		document.body.appendChild(new AuthRequiredDialog(node.title));
+	}
+
+	onNodeClick(evt) {
+		const node = evt.detail;
+		if (!node.authRequired) return fireEvent(this, "addnode", node);
+
+		evt.preventDefault();
+		document.body.appendChild(new AuthRequiredDialog(node.title));
 	}
 
 	render() {
@@ -27,7 +35,8 @@ export class NodePickerDrawer extends HTMLElement {
 
 	connectedCallback() {
 		this.replaceChildren(...this.render());
-		this.addEventListener("defnodepick", this.handleNodeSelected.bind(this));
+		this.addEventListener("defnodepick", this.onNodeClick.bind(this));
+		this.addEventListener("dragstart", this.onNodeDragStart.bind(this));
 	}
 }
 

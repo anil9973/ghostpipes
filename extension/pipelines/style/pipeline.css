@@ -77,9 +77,10 @@ def-node-card {
 	display: flex;
 	column-gap: 0.2em;
 	padding: 0.5em;
-	box-shadow: var(--card);
 	border-radius: 0.5em;
+	box-shadow: var(--card);
 	background-color: light-dark(white, black);
+	position: relative;
 
 	& .subtitle {
 		font-size: small;
@@ -89,6 +90,12 @@ def-node-card {
 	& .column {
 		display: flex;
 		flex-direction: column;
+	}
+
+	& .auth-lock {
+		position: absolute;
+		top: 0;
+		right: 0;
 	}
 }
 
@@ -526,12 +533,14 @@ ai-processor-node-card {
 }
 
 pipeline-canvas {
+	--grid-color: light-dark(#e5e7eb, #1f2937);
 	flex-grow: 1;
-	height: 100vh;
-	position: relative;
+	min-height: 100vh;
+	scrollbar-width: none;
 	background-image: radial-gradient(var(--grid-color) 1px, transparent 1px);
 	background-size: 20px 20px;
-	overflow: hidden;
+	overflow: visible;
+	position: relative;
 
 	& #pipe-layer {
 		position: absolute;

@@ -1,5 +1,6 @@
 import { AutoTriggerNodes, DefNode, HttpNodes, ManualInputNodes } from "../../../models/DefNode.js";
 import { html } from "../../../../lib/om.compact.js";
+import { NodeType } from "../../../models/PipeNode.js";
 import { DefNodeCard } from "./node-card.js";
 
 /**
@@ -44,6 +45,7 @@ export class InputResources extends HTMLDetailsElement {
 					<summary>Auto trigger</summary>
 					<ul>
 						${AutoTriggerNodes.map((nodeType) => new DefNodeCard(new DefNode(nodeType)))}
+						${new DefNodeCard(new DefNode(NodeType.WEBHOOK, true))}
 					</ul>
 				</details>
 			</ul>`;

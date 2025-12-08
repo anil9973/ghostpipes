@@ -1,5 +1,5 @@
 import { html } from "../../../../lib/om.compact.js";
-import { DefNode, OutputNodes } from "../../../models/DefNode.js";
+import { DefNode, OutputAuthNodes, OutputNodes } from "../../../models/DefNode.js";
 import { DefNodeCard } from "./node-card.js";
 
 /**
@@ -24,6 +24,7 @@ export class OutputDestinations extends HTMLDetailsElement {
 			</summary>
 			<ul>
 				${OutputNodes.map((nodeType) => new DefNodeCard(new DefNode(nodeType)))}
+				${OutputAuthNodes.map((nodeType) => new DefNodeCard(new DefNode(nodeType, true)))}
 			</ul>`;
 	}
 

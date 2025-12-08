@@ -1,18 +1,17 @@
-import { DriveUploadConfig } from "../../../../models/configs/output/DriveUploadConfig.js";
+import { SpreedsheetConfig, SheetOperation } from "../../../../models/configs/output/SpreedsheetConfig.js";
 import { html, react } from "../../../../../lib/om.compact.js";
 import { pipedb } from "../../../../db/pipeline-db.js";
 import { NodeConfigHeader } from "../config-node-header.js";
 import { ConfigErrorBox } from "../config-error-box.js";
-import { FormatOutput } from "../../../../models/configs/processing/FormatConfig.js";
 
-export class DriveUploadNodePopup extends HTMLElement {
+export class SpreedsheetExportNodePopup extends HTMLElement {
 	/** @param {import('../../../../models/PipeNode.js').PipeNode} pipeNode */
 	constructor(pipeNode) {
 		super();
 		this.popover = "";
 		this.className = "node-config-popup";
 		this.pipeNode = pipeNode;
-		/** @type {DriveUploadConfig} */
+		/** @type {SpreedsheetConfig} */
 		this.config = pipeNode.config;
 		this.errors = react([]);
 	}
@@ -28,7 +27,7 @@ export class DriveUploadNodePopup extends HTMLElement {
 
 			fireEvent(this, "savenodeconfig", this.pipeNode);
 			this.hidePopover();
-			notify("Drive upload configuration saved");
+			notify("Spreadsheet export configuration saved");
 		} catch (error) {
 			console.error("Save failed:", error);
 			notify("Failed to save configuration", "error");
@@ -39,31 +38,33 @@ export class DriveUploadNodePopup extends HTMLElement {
 		return html`<section>
 			<ul class="config-field-list">
 				<label>
-					<div>Folder Path</div>
-					<input type="text" .value=${() => this.config.folderPath} placeholder="My Drive" />
+					<div>Spreadsheet Name</div>
+					<input type="text" .value=${() => this.config.spreadsheetName} placeholder="My Spreadsheet" />
 				</label>
 
 				<label>
-					<div>Filename</div>
-					<input type="text" .value=${() => this.config.filename} placeholder="data" required />
+					<div>Sheet Name</div>
+					<input type="text" .value=${() => this.config.sheetName} placeholder="Sheet1" required />
 				</label>
 
 				<label>
-					<div>Format</div>
-					<select .value=${() => this.config.format}>
-						<option value="${FormatOutput.JSON}">JSON</option>
-						<option value="${FormatOutput.CSV}">CSV</option>
-						<option value="${FormatOutput.XML}">XML</option>
-						<option value="${FormatOutput.TEXT}">Text</option>
+					<div>Operation</div>
+					<select .value=${() => this.config.operation}>
+						<option value="${SheetOperation.APPEND}">Append rows</option>
+						<option value="${SheetOperation.REPLACE}">Replace all data</option>
 					</select>
+				</label>
+
+				<label class="checkbox-label">
+					<input type="checkbox" ?checked=${() => this.config.includeHeaders} />
+					<span>Include column headers</span>
 				</label>
 
 				<div class="info-box">
 					<p>
-						📁 Files will be uploaded to:
+						📊 Data will be exported to:
 						<strong
-							>${() => this.config.folderPath}/${() => this.config.filename}${() =>
-								this.config.getExtension()}</strong
+							>${() => this.config.spreadsheetName || "New Spreadsheet"} > ${() => this.config.sheetName}</strong
 						>
 					</p>
 					<p>🔐 Authentication is handled securely by the backend</p>
@@ -73,7 +74,7 @@ export class DriveUploadNodePopup extends HTMLElement {
 	}
 
 	connectedCallback() {
-		const header = new NodeConfigHeader({ icon: "drive-upload", title: "Upload to Drive" });
+		const header = new NodeConfigHeader({ icon: "spreadsheet-write", title: "Export to Sheet" });
 		$on(header, "update", this.handleSave.bind(this));
 		this.replaceChildren(header, this.render(), new ConfigErrorBox(this.errors));
 		this.showPopover();
@@ -85,4 +86,4 @@ export class DriveUploadNodePopup extends HTMLElement {
 	}
 }
 
-customElements.define("drive-upload-node-card", DriveUploadNodePopup);
+customElements.define("spreedsheet-export-node-card", SpreedsheetExportNodePopup);

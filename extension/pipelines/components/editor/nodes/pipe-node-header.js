@@ -1,5 +1,5 @@
 import { html } from "../../../../lib/om.compact.js";
-import { PipeNode } from "../../../models/PipeNode.js";
+import { NodeType, PipeNode } from "../../../models/PipeNode.js";
 import { AggregateDataNodePopup } from "./processing/aggregate-data-node.js";
 import { ConditionalDataNodePopup } from "./processing/conditional-data-node.js";
 import { CustomCodeDataNodePopup } from "./processing/custom-code-data-node.js";
@@ -31,6 +31,8 @@ import { HttpPostRequestNodePopup } from "./output/http-post-request-node.js";
 import { SendEmailNodePopup } from "./output/send-email-node.js";
 import { DownloadNodePopup } from "./output/download-node.js";
 import { ScheduledHttpNodePopup } from "./input/scheduled-http-node.js";
+import { SpreedsheetExportNodePopup } from "./output/spreedshot-export-node.js";
+import { DriveUploadNodePopup } from "./output/drive-upload-node.js";
 
 // Factory map using arrow functions
 const NODE_COMPONENT_MAP = Object.freeze({
@@ -69,6 +71,8 @@ const NODE_COMPONENT_MAP = Object.freeze({
 	file_append: (node) => new FileAppendNodePopup(node),
 	http_post: (node) => new HttpPostRequestNodePopup(node),
 	email_send: (node) => new SendEmailNodePopup(node),
+	[NodeType.SPREADSHEET_WRITE]: (node) => new SpreedsheetExportNodePopup(node),
+	[NodeType.DRIVE_UPLOAD]: (node) => new DriveUploadNodePopup(node),
 });
 
 export class PipeNodeHeader extends HTMLElement {

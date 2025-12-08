@@ -1,5 +1,6 @@
 import { FileAppendConfig } from "../../../../pipelines/models/configs/output/FileAppendConfig.js";
 import { FormatOutput } from "../../../../pipelines/models/configs/processing/FormatConfig.js";
+import { getFileHandleById } from "../../../../pipelines/db/filehandle-db.js";
 import { ExecutionContext } from "../../execution-context.js";
 import { BaseExecutor } from "../base-executor.js";
 
@@ -7,16 +8,17 @@ export class FileAppendExecutor extends BaseExecutor {
 	/** @param {*} input - @param {FileAppendConfig} config - @param {ExecutionContext} context */
 	async execute(input, config, context) {
 		const { path, format, createIfMissing, addHeader } = config;
+		const fileHandle = await getFileHandleById(config.fileHandleId);
+		if (fileHandle instanceof FileSystemDirectoryHandle) return;
 
-		this.dirHandle ??= await this.setDirHandle();
-		if (!this.dirHandle) return;
+		const isGranted = (await fileHandle["queryPermission"]({ mode: "readwrite" })) === "granted";
+		if (!isGranted) await requestFilePermission(fileHandle.name);
 
 		const content = this.formatContent(input, format, addHeader);
 		const contentBuffer = new TextEncoder().encode(content);
-		const fileHandle = await this.getFileHandle(path);
+		/**@type {FileSystemWritableFileStream} */
 		const writableStream = await fileHandle.createWritable({ keepExistingData: true });
 		try {
-			/**@type {FileSystemWritableFileStream} */
 			const offset = (await fileHandle.getFile()).size;
 			await writableStream.seek(offset);
 			await writableStream.write(contentBuffer);
@@ -51,14 +53,18 @@ export class FileAppendExecutor extends BaseExecutor {
 		items.forEach((item) => lines.push(headers.map((h) => item[h]).join(",")));
 		return lines.join("\n");
 	}
+}
 
-	async getFileHandle(filePath) {
-		let dirHandle = this.dirHandle;
-		if (filePath.includes("/")) {
-			const dirPaths = filePath.split("/");
-			filePath = dirPaths.pop();
-			for (const dirName of dirPaths) dirHandle = await dirHandle.getDirectoryHandle(dirName, { create: true });
-		}
-		return await dirHandle.getFileHandle(filePath, { create: true });
+export async function requestFilePermission(filename, isDirectory) {
+	try {
+		await chrome.tabs.create({ url: "options/index.html" });
+		await new Promise((r) => setTimeout(r, 2000));
+
+		const message = { command: "requestPermission", filename, isDirectory };
+		const isGranted = await chrome.runtime.sendMessage(message);
+		isGranted || console.error("Permission denied");
+		return isGranted;
+	} catch (error) {
+		console.error(error);
 	}
 }

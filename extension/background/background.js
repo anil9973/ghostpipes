@@ -42,6 +42,7 @@ chrome.alarms.onAlarm.addListener((alarm) => {
 chrome.action.onClicked.addListener(toggleSelectionActionScript);
 
 getStore("autoRunTabUrlPatterns", ({ autoRunTabUrlPatterns }) => {
+	if (!autoRunTabUrlPatterns) return;
 	Object.keys(autoRunTabUrlPatterns).length === 0 || chrome.tabs.onUpdated.addListener(onUpdateTab);
 });
 
@@ -91,14 +92,14 @@ export async function setInstallation({ reason }) {
 	});
 
 	// Temporary: Testing only
-	// chrome.scripting.registerContentScripts([
-	// 	{
-	// 		id: "textSelector",
-	// 		allFrames: true,
-	// 		js: ["scripts/content.js"],
-	// 		matches: ["https://*/*"],
-	// 	},
-	// ]);
+	chrome.scripting.registerContentScripts([
+		{
+			id: "textSelector",
+			allFrames: true,
+			js: ["scripts/content.js"],
+			matches: ["https://*/*"],
+		},
+	]);
 }
 
 // installation setup
